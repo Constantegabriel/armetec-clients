@@ -1,0 +1,355 @@
+/* ---------- Editor ---------- */
+.editor {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+.save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.save-indicator.is-saved {
+  color: var(--success);
+}
+.save-indicator.is-offline {
+  color: var(--warning);
+}
+.save-indicator.is-error {
+  color: var(--danger);
+}
+
+/* Ajustes do React Flow para o tema */
+.react-flow {
+  --xy-background-color: var(--bg);
+  --xy-edge-stroke: var(--edge);
+  --xy-edge-stroke-width: 2.25;
+  --xy-edge-stroke-selected: var(--accent);
+  --xy-connectionline-stroke: var(--accent);
+  --xy-connectionline-stroke-width: 2.25;
+  --xy-controls-button-background-color: var(--surface);
+  --xy-controls-button-background-color-hover: var(--surface-2);
+  --xy-controls-button-color: var(--text);
+  --xy-controls-button-border-color: var(--border);
+  --xy-minimap-background-color: var(--surface);
+  --xy-node-boxshadow-selected: none;
+}
+.react-flow__controls,
+.react-flow__minimap {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--accent);
+}
+.react-flow__node {
+  cursor: grab;
+}
+.react-flow__node.dragging {
+  cursor: grabbing;
+}
+
+.edge-remove {
+  position: absolute;
+  pointer-events: all;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+.edge-remove:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ---------- Bloco ---------- */
+.block {
+  --c: var(--kind-page);
+  width: 290px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--c);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.block.is-selected {
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent), var(--shadow);
+}
+.block-client {
+  width: 310px;
+}
+
+.block-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 8px 0 14px;
+  min-height: 34px;
+}
+.block-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--c);
+}
+.kind-select {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px 2px 0;
+}
+.kind-select select {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  padding-right: 2px;
+}
+.kind-select select option {
+  background: var(--surface);
+  color: var(--text);
+  text-transform: none;
+}
+.kind-select:hover {
+  background: var(--surface-2);
+}
+
+.block-title,
+.block-subtitle {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 2px 8px 0;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: text;
+}
+.block-title {
+  font-size: 16px;
+  font-weight: 650;
+}
+.block-client .block-title {
+  font-size: 19px;
+}
+.block-subtitle {
+  color: var(--muted);
+  margin-top: 0;
+}
+.block-title:hover,
+.block-subtitle:hover {
+  background: var(--surface-2);
+}
+.block-title:focus,
+.block-subtitle:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+.block-title::placeholder,
+.block-subtitle::placeholder,
+.item-list textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+/* Lista de itens */
+.item-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0 8px;
+}
+.item-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.item-list .bullet {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 5px 0 0 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+.item-list .bullet::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--c);
+  transition: inset 0.12s;
+}
+.item-list .bullet:hover::before {
+  inset: 3px;
+  background: transparent;
+  border: 2px solid var(--c);
+}
+.item-list li.done .bullet::before {
+  inset: 3px;
+  border-radius: 5px;
+  background: var(--c);
+}
+.item-list li.done textarea {
+  color: var(--muted);
+}
+.item-list textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  overflow: hidden;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  line-height: 1.4;
+  cursor: text;
+}
+.item-list textarea:hover {
+  background: var(--surface-2);
+}
+.item-list textarea:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+.item-remove {
+  min-width: 24px;
+  height: 26px;
+  margin-top: 1px;
+  visibility: hidden;
+}
+.item-list li:hover .item-remove,
+.item-list li:focus-within .item-remove {
+  visibility: visible;
+}
+
+.block-foot {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+}
+.block-foot button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.block-foot button:hover {
+  color: var(--text);
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+}
+
+/* Portas de ligação */
+.react-flow__handle.port {
+  width: 14px;
+  height: 14px;
+  top: 30px;
+  background: var(--surface);
+  border: 2px solid var(--c);
+  transition: transform 0.12s, background 0.12s;
+}
+.react-flow__handle.port.react-flow__handle-left {
+  left: -8px;
+}
+.react-flow__handle.port.react-flow__handle-right {
+  right: -8px;
+  cursor: crosshair;
+}
+.react-flow__handle.port:hover,
+.react-flow__handle.port.connectingto {
+  background: var(--c);
+  transform: scale(1.25);
+}
+
+/* ---------- Impressão ---------- */
+.print-view {
+  display: none;
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+    color: #111;
+  }
+  .editor {
+    display: none !important;
+  }
+  .print-view {
+    display: block;
+    padding: 8mm 4mm;
+    font-size: 12.5pt;
+  }
+  .print-view h1 {
+    font-size: 22pt;
+  }
+  .print-niche {
+    margin: 4px 0 0;
+    font-size: 13pt;
+    color: #444;
+  }
+  .print-date {
+    margin: 2px 0 18px;
+    color: #777;
+    font-size: 10pt;
+  }
+  .print-view section {
+    break-inside: avoid;
+    margin-top: 14px;
+  }
+  .print-view h2 {
+    font-size: 14pt;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+  }
+  .print-tag {
+    font-size: 9pt;
+    font-weight: 500;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .print-view ul {
+    margin: 6px 0 0;
+    padding-left: 20px;
+  }
+}
