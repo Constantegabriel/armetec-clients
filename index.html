@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Armetec · Escopo de Clientes</title>
+<style>
+  :root {
+    --bg: #16171d; --grid: #262833; --panel: #1f2029; --panel2: #2a2c38;
+    --border: #383b4a; --text: #e8e9f0; --muted: #9496a8; --accent: #ff6d5a;
+    --edge: #7c7f96; --edge-hot: #ff6d5a;
+    --t-pagina: #4c8dff; --t-func: #2fbf71; --t-integ: #b46cff; --t-obs: #f2b33d; --t-root: #ff6d5a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  input, textarea, select { font: inherit; color: inherit; }
+
+  /* Topbar */
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 52px; display: flex; align-items: center;
+    gap: 8px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 20; }
+  #topbar .logo { font-weight: 700; color: var(--accent); margin-right: 6px; white-space: nowrap; }
+  #projName { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 6px 8px;
+    min-width: 120px; flex: 0 1 260px; font-weight: 600; }
+  #projName:hover, #projName:focus { border-color: var(--border); outline: none; background: var(--panel2); }
+  #saveState { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .spacer { flex: 1; }
+  .btn { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px;
+    white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.08); }
+
+  /* Canvas */
+  #canvas { position: fixed; top: 52px; left: 0; right: 0; bottom: 0; overflow: hidden; cursor: grab;
+    background-color: var(--bg);
+    background-image: radial-gradient(var(--grid) 1.2px, transparent 1.2px); background-size: 22px 22px; touch-action: none; }
+  #canvas.panning { cursor: grabbing; }
+  #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+  #edges path.edge { fill: none; stroke: var(--edge); stroke-width: 2.5; }
+  #edges path.hit { fill: none; stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: pointer; }
+  #edges g:hover path.edge { stroke: var(--edge-hot); stroke-dasharray: 6 4; }
+  #edges path.temp { fill: none; stroke: var(--edge-hot); stroke-width: 2.5; stroke-dasharray: 6 4; }
+
+  /* Nodes */
+  .node { position: absolute; width: 280px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.35); cursor: default; }
+  .node.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,109,90,.35), 0 6px 20px rgba(0,0,0,.35); }
+  .node.drop-target { border-color: var(--edge-hot); box-shadow: 0 0 0 3px rgba(255,109,90,.5); }
+  .node .bar { height: 5px; border-radius: 12px 12px 0 0; background: var(--c); }
+  .node .head { display: flex; align-items: center; gap: 6px; padding: 8px 8px 6px 12px; cursor: move; }
+  .node .type { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--c);
+    background: transparent; border: 0; padding: 2px 0; cursor: pointer; font-weight: 700; }
+  .node .type option { color: #000; }
+  .node .head .grow { flex: 1; }
+  .node .icon-btn { background: transparent; border: 0; color: var(--muted); padding: 2px 6px; border-radius: 6px; font-size: 16px; line-height: 1; }
+  .node .icon-btn:hover { color: var(--text); background: var(--panel2); }
+  .node .title { display: block; width: calc(100% - 20px); margin: 0 10px 6px; background: transparent;
+    border: 1px solid transparent; border-radius: 6px; padding: 4px 4px; font-size: 16px; font-weight: 650; }
+  .node .title:hover, .node .title:focus, .node .sub:hover, .node .sub:focus { border-color: var(--border); outline: none; background: var(--panel2); }
+  .node .sub { display: block; width: calc(100% - 20px); margin: -4px 10px 8px; background: transparent;
+    border: 1px solid transparent; border-radius: 6px; padding: 3px 4px; color: var(--muted); }
+  .node ul { list-style: none; margin: 0; padding: 0 10px; }
+  .node li { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 2px; }
+  .node li::before { content: "•"; color: var(--c); padding-top: 4px; font-weight: 700; }
+  .node li textarea { flex: 1; resize: none; overflow: hidden; background: transparent; border: 1px solid transparent;
+    border-radius: 6px; padding: 3px 5px; min-height: 26px; height: 26px; line-height: 1.35; }
+  .node li textarea:hover, .node li textarea:focus { border-color: var(--border); outline: none; background: var(--panel2); }
+  .node li .del { visibility: hidden; padding-top: 4px; }
+  .node li:hover .del { visibility: visible; }
+  .node .foot { display: flex; gap: 6px; padding: 8px 10px 10px; }
+  .node .foot button { flex: 1; background: var(--panel2); border: 1px dashed var(--border); border-radius: 8px;
+    padding: 6px 4px; color: var(--muted); font-size: 12.5px; }
+  .node .foot button:hover { color: var(--text); border-color: var(--c); }
+  .port { position: absolute; top: 22px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel);
+    border: 2px solid var(--c); }
+  .port.in { left: -9px; }
+  .port.out { right: -9px; cursor: crosshair; }
+  .port.out:hover { background: var(--c); transform: scale(1.2); }
+  .node.root { width: 300px; }
+  .node.root .title { font-size: 19px; }
+
+  /* Zoom controls */
+  #zoomCtl { position: fixed; right: 14px; bottom: 14px; display: flex; gap: 6px; z-index: 10; }
+  #zoomCtl button { width: 38px; height: 38px; border-radius: 10px; background: var(--panel); border: 1px solid var(--border); font-size: 16px; }
+  #zoomCtl button:hover { border-color: var(--muted); }
+  #hint { pointer-events: none; position: fixed; left: 14px; bottom: 14px; color: var(--muted); font-size: 12px; z-index: 10; max-width: 60vw; }
+
+  /* Modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; width: min(640px, 100%);
+    max-height: 85vh; display: flex; flex-direction: column; }
+  .modal h2 { margin: 0; padding: 16px 18px; font-size: 17px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .modal .body { padding: 12px 18px 18px; overflow: auto; }
+  .proj { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 8px; background: var(--panel2); cursor: pointer; }
+  .proj:hover { border-color: var(--accent); }
+  .proj.current { border-color: var(--accent); }
+  .proj .meta { flex: 1; min-width: 0; }
+  .proj .meta b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .proj .meta small { color: var(--muted); }
+  .menu-list button { display: block; width: 100%; text-align: left; margin-bottom: 8px; }
+  #mdOut { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+
+  @media (max-width: 720px) {
+    #topbar .logo, #saveState, .hide-sm { display: none; }
+    #hint { display: none; }
+  }
+
+  /* Print: lista limpa */
+  #printView { display: none; }
+  @media print {
+    body { background: #fff; color: #000; overflow: visible; }
+    #topbar, #canvas, #zoomCtl, #hint, .modal-bg { display: none !important; }
+    #printView { display: block; padding: 24px; font-size: 13px; }
+    #printView h1 { margin: 0 0 4px; }
+    #printView h2 { margin: 18px 0 4px; font-size: 16px; }
+    #printView .tag { font-size: 11px; color: #666; text-transform: uppercase; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span class="logo">◆ Escopo</span>
+  <input id="projName" placeholder="Nome do projeto" title="Nome do projeto">
+  <span id="saveState">salvo</span>
+  <div class="spacer"></div>
+  <button class="btn primary" id="btnAdd">+ Bloco</button>
+  <button class="btn" id="btnProjects">Projetos</button>
+  <button class="btn" id="btnMore">Exportar ▾</button>
+</div>
+
+<div id="canvas">
+  <div id="world">
+    <svg id="edges"></svg>
+    <div id="nodes"></div>
+  </div>
+</div>
+
+<div id="zoomCtl">
+  <button id="zOut" title="Diminuir zoom">−</button>
+  <button id="zFit" title="Ajustar à tela">⤢</button>
+  <button id="zIn" title="Aumentar zoom">+</button>
+</div>
+<div id="hint">Arraste o fundo para mover · roda do mouse para zoom · puxe a bolinha da direita até outro bloco para ligar · clique numa ligação para remover · Enter cria novo item</div>
+
+<!-- Projetos -->
+<div class="modal-bg" id="mProjects">
+  <div class="modal">
+    <h2>Projetos salvos <span class="spacer"></span><button class="btn primary" id="btnNew">+ Novo projeto</button><button class="btn" data-close>✕</button></h2>
+    <div class="body" id="projList"></div>
+  </div>
+</div>
+
+<!-- Exportar -->
+<div class="modal-bg" id="mMore">
+  <div class="modal">
+    <h2>Exportar / Importar <span class="spacer"></span><button class="btn" data-close>✕</button></h2>
+    <div class="body menu-list">
+      <button class="btn" id="exMd">📋 Ver escopo em texto (copiar / baixar .md)</button>
+      <button class="btn" id="exPrint">🖨️ Imprimir / salvar como PDF</button>
+      <button class="btn" id="exJson">💾 Baixar arquivo do projeto (.json)</button>
+      <button class="btn" id="imJson">📂 Importar arquivo de projeto (.json)</button>
+      <button class="btn" id="dup">⧉ Duplicar este projeto como modelo</button>
+      <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<!-- Markdown -->
+<div class="modal-bg" id="mMd">
+  <div class="modal">
+    <h2>Escopo em texto <span class="spacer"></span><button class="btn" id="mdCopy">Copiar</button><button class="btn" id="mdDl">Baixar .md</button><button class="btn" data-close>✕</button></h2>
+    <div class="body"><textarea id="mdOut" readonly></textarea></div>
+  </div>
+</div>
+
+<div id="printView"></div>
+
+<script>
+(() => {
+  const STORE = 'armetec-escopo-v1';
+  const TYPES = {
+    root:  { label: 'Cliente',        color: 'var(--t-root)' },
+    pagina:{ label: 'Página',         color: 'var(--t-pagina)' },
+    func:  { label: 'Funcionalidade', color: 'var(--t-func)' },
+    integ: { label: 'Integração',     color: 'var(--t-integ)' },
+    obs:   { label: 'Observação',     color: 'var(--t-obs)' },
+  };
+  const NODE_W = 280, ROOT_W = 300, PORT_Y = 30;
+
+  const $ = s => document.querySelector(s);
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+  // ---------- storage ----------
+  let db = loadDb();
+  function loadDb() {
+    try { const d = JSON.parse(localStorage.getItem(STORE)); if (d && d.projects) return d; } catch (e) {}
+    return { projects: {}, current: null };
+  }
+  let saveTimer = null;
+  function persist() {
+    $('#saveState').textContent = 'salvando…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      P.updatedAt = Date.now();
+      db.projects[P.id] = P; db.current = P.id;
+      try { localStorage.setItem(STORE, JSON.stringify(db)); $('#saveState').textContent = 'salvo ✓'; }
+      catch (e) { $('#saveState').textContent = 'erro ao salvar!'; }
+    }, 300);
+  }
+
+  function newProject() {
+    const rootId = uid();
+    return {
+      id: uid(), name: 'Novo cliente', createdAt: Date.now(), updatedAt: Date.now(),
+      view: { x: 80, y: 80, z: 1 },
+      nodes: [{ id: rootId, type: 'root', x: 0, y: 120, title: '', sub: '', items: [''] }],
+      edges: [],
+    };
+  }
+
+  let P = db.current && db.projects[db.current] ? db.projects[db.current] : newProject();
+
+  // ---------- view ----------
+  const canvas = $('#canvas'), world = $('#world'), svg = $('#edges'), nodesEl = $('#nodes');
+  function applyView() { world.style.transform = `translate(${P.view.x}px,${P.view.y}px) scale(${P.view.z})`;
+    canvas.style.backgroundPosition = `${P.view.x}px ${P.view.y}px`; canvas.style.backgroundSize = `${22*P.view.z}px ${22*P.view.z}px`; }
+  function toWorld(cx, cy) { const r = canvas.getBoundingClientRect();
+    return { x: (cx - r.left - P.view.x) / P.view.z, y: (cy - r.top - P.view.y) / P.view.z }; }
+  function zoomAt(f, cx, cy) {
+    const r = canvas.getBoundingClientRect(); const z = Math.min(2, Math.max(0.25, P.view.z * f));
+    const px = cx - r.left, py = cy - r.top;
+    P.view.x = px - (px - P.view.x) * (z / P.view.z); P.view.y = py - (py - P.view.y) * (z / P.view.z); P.view.z = z;
+    applyView(); persist();
+  }
+  function fit() {
+    if (!P.nodes.length) return;
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const n of P.nodes) { const el = nodeEl(n.id); const w = el ? el.offsetWidth : NODE_W, h = el ? el.offsetHeight : 150;
+      x1 = Math.min(x1, n.x); y1 = Math.min(y1, n.y); x2 = Math.max(x2, n.x + w); y2 = Math.max(y2, n.y + h); }
+    const r = canvas.getBoundingClientRect(), pad = 60;
+    const z = Math.min(1.2, Math.max(0.25, Math.min((r.width - pad*2) / (x2 - x1), (r.height - pad*2) / (y2 - y1))));
+    P.view.z = z; P.view.x = (r.width - (x2 - x1) * z) / 2 - x1 * z; P.view.y = (r.height - (y2 - y1) * z) / 2 - y1 * z;
+    applyView(); persist();
+  }
+
+  // ---------- render ----------
+  const getNode = id => P.nodes.find(n => n.id === id);
+  const nodeEl = id => nodesEl.querySelector(`[data-id="${id}"]`);
+  let selected = null;
+
+  function render() {
+    $('#projName').value = P.name;
+    nodesEl.innerHTML = '';
+    for (const n of P.nodes) nodesEl.appendChild(buildNode(n));
+    nodesEl.querySelectorAll('textarea').forEach(autoGrow);
+    applyView(); drawEdges();
+  }
+
+  function buildNode(n) {
+    const t = TYPES[n.type] || TYPES.pagina, isRoot = n.type === 'root';
+    const el = document.createElement('div');
+    el.className = 'node' + (isRoot ? ' root' : '') + (selected === n.id ? ' selected' : '');
+    el.dataset.id = n.id; el.style.left = n.x + 'px'; el.style.top = n.y + 'px'; el.style.setProperty('--c', t.color);
+
+    const typeCtl = isRoot ? `<span class="type">Cliente · início</span>`
+      : `<select class="type" title="Tipo do bloco">${Object.entries(TYPES).filter(([k]) => k !== 'root')
+          .map(([k, v]) => `<option value="${k}" ${k === n.type ? 'selected' : ''}>${v.label}</option>`).join('')}</select>`;
+
+    el.innerHTML = `
+      <div class="bar"></div>
+      ${isRoot ? '' : '<div class="port in" title="Entrada"></div>'}
+      <div class="port out" title="Arraste até outro bloco para ligar"></div>
+      <div class="head">${typeCtl}<span class="grow"></span>
+        ${isRoot ? '' : '<button class="icon-btn" data-act="dup" title="Duplicar bloco">⧉</button><button class="icon-btn" data-act="del" title="Excluir bloco">🗑</button>'}
+      </div>
+      <input class="title" placeholder="${isRoot ? 'Nome da empresa' : 'Ex.: Página inicial'}" value="${esc(n.title)}">
+      ${isRoot ? `<input class="sub" placeholder="Nicho (ex.: Clínica odontológica)" value="${esc(n.sub || '')}">` : ''}
+      <ul>${n.items.map((it, i) => itemHtml(it, i, isRoot)).join('')}</ul>
+      <div class="foot">
+        <button data-act="item">+ item</button>
+        <button data-act="child">+ ligar novo bloco</button>
+      </div>`;
+    return el;
+  }
+  function itemHtml(it, i, isRoot) {
+    return `<li data-i="${i}"><textarea rows="1" placeholder="${isRoot ? 'Observação (prazo, valor, contato…)' : 'O que vai conter…'}">${esc(it)}</textarea><button class="icon-btn del" data-act="delitem" title="Remover item">×</button></li>`;
+  }
+  function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function autoGrow(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 2 + 'px'; }
+
+  function rerenderNode(id, focusItem) {
+    const n = getNode(id), old = nodeEl(id); if (!n || !old) return;
+    const el = buildNode(n); old.replaceWith(el); el.querySelectorAll('textarea').forEach(autoGrow);
+    if (focusItem != null) { const t = el.querySelectorAll('li textarea')[focusItem]; if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }
+    drawEdges();
+  }
+
+  function portPos(n, side) {
+    const w = n.type === 'root' ? ROOT_W : NODE_W;
+    return { x: n.x + (side === 'out' ? w : 0), y: n.y + PORT_Y };
+  }
+  function curve(a, b) {
+    const dx = Math.max(60, Math.abs(b.x - a.x) * 0.5);
+    return `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`;
+  }
+  function drawEdges(temp) {
+    let html = '';
+    for (const e of P.edges) {
+      const a = getNode(e.from), b = getNode(e.to); if (!a || !b) continue;
+      const d = curve(portPos(a, 'out'), portPos(b, 'in'));
+      html += `<g data-edge="${e.id}"><path class="edge" d="${d}"/><path class="hit" d="${d}"><title>Clique para remover a ligação</title></path></g>`;
+    }
+    if (temp) html += `<path class="temp" d="${curve(temp.a, temp.b)}"/>`;
+    svg.innerHTML = html;
+  }
+
+  // ---------- actions ----------
+  function addNode(opts = {}) {
+    const n = { id: uid(), type: opts.type || 'pagina', x: opts.x ?? 0, y: opts.y ?? 0, title: opts.title || '', items: [''] };
+    P.nodes.push(n); return n;
+  }
+  function addChild(parentId) {
+    const p = getNode(parentId), pw = p.type === 'root' ? ROOT_W : NODE_W;
+    const kids = P.edges.filter(e => e.from === parentId).map(e => getNode(e.to)).filter(Boolean);
+    let y = p.y;
+    if (kids.length) { const last = kids.reduce((a, b) => (b.y > a.y ? b : a));
+      const el = nodeEl(last.id); y = last.y + (el ? el.offsetHeight : 160) + 30; }
+    const childType = p.type === 'root' ? 'pagina' : (p.type === 'pagina' ? 'func' : p.type);
+    const n = addNode({ x: p.x + pw + 90, y, type: childType });
+    P.edges.push({ id: uid(), from: parentId, to: n.id });
+    selected = n.id; render(); persist();
+    focusTitle(n.id); ensureVisible(n);
+  }
+  function focusTitle(id) { const el = nodeEl(id); el && el.querySelector('.title').focus(); }
+  function ensureVisible(n) {
+    const r = canvas.getBoundingClientRect(), z = P.view.z;
+    const sx = n.x * z + P.view.x, sy = n.y * z + P.view.y;
+    if (sx + NODE_W * z > r.width - 20) P.view.x -= sx + NODE_W * z - r.width + 40;
+    if (sy + 200 * z > r.height - 20) P.view.y -= sy + 200 * z - r.height + 40;
+    if (sx < 20) P.view.x += 40 - sx; if (sy < 20) P.view.y += 40 - sy;
+    applyView();
+  }
+  function deleteNode(id) {
+    const n = getNode(id); if (!n || n.type === 'root') return;
+    const hasContent = n.title || n.items.some(Boolean);
+    if (hasContent && !confirm(`Excluir o bloco "${n.title || 'sem título'}"?`)) return;
+    P.nodes = P.nodes.filter(x => x.id !== id); P.edges = P.edges.filter(e => e.from !== id && e.to !== id);
+    if (selected === id) selected = null; render(); persist();
+  }
+  function connect(from, to) {
+    if (from === to) return;
+    if (P.edges.some(e => (e.from === from && e.to === to))) return;
+    if (getNode(to).type === 'root') return;
+    P.edges.push({ id: uid(), from, to }); drawEdges(); persist();
+  }
+
+  // ---------- events: inputs ----------
+  nodesEl.addEventListener('input', ev => {
+    const el = ev.target.closest('.node'); if (!el) return; const n = getNode(el.dataset.id);
+    const t = ev.target;
+    if (t.classList.contains('title')) { n.title = t.value; if (n.type === 'root' && (!P.name || P.name === 'Novo cliente' || P.name === P._autoName)) { P.name = P._autoName = t.value || 'Novo cliente'; $('#projName').value = P.name; } }
+    else if (t.classList.contains('sub')) n.sub = t.value;
+    else if (t.tagName === 'TEXTAREA') { n.items[+t.closest('li').dataset.i] = t.value; autoGrow(t); drawEdges(); }
+    persist();
+  });
+  nodesEl.addEventListener('change', ev => {
+    if (!ev.target.classList.contains('type')) return;
+    const el = ev.target.closest('.node'); getNode(el.dataset.id).type = ev.target.value; rerenderNode(el.dataset.id); persist();
+  });
+  nodesEl.addEventListener('keydown', ev => {
+    const t = ev.target, el = t.closest('.node'); if (!el) return; const n = getNode(el.dataset.id);
+    if (t.tagName === 'TEXTAREA' && ev.key === 'Enter' && !ev.shiftKey) {
+      ev.preventDefault(); const i = +t.closest('li').dataset.i;
+      n.items.splice(i + 1, 0, ''); rerenderNode(n.id, i + 1); persist();
+    } else if (t.tagName === 'TEXTAREA' && ev.key === 'Backspace' && t.value === '' && n.items.length > 1) {
+      ev.preventDefault(); const i = +t.closest('li').dataset.i;
+      n.items.splice(i, 1); rerenderNode(n.id, Math.max(0, i - 1)); persist();
+    } else if ((t.classList.contains('title') || t.classList.contains('sub')) && ev.key === 'Enter') {
+      ev.preventDefault();
+      if (t.classList.contains('title') && n.type === 'root') { el.querySelector('.sub').focus(); return; }
+      const first = el.querySelector('li textarea'); first ? first.focus() : null;
+    }
+  });
+  nodesEl.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-act]'); if (!b) return;
+    const id = b.closest('.node').dataset.id, n = getNode(id), act = b.dataset.act;
+    if (act === 'item') { n.items.push(''); rerenderNode(id, n.items.length - 1); persist(); }
+    else if (act === 'delitem') { const i = +b.closest('li').dataset.i; n.items.splice(i, 1); if (!n.items.length) n.items.push(''); rerenderNode(id); persist(); }
+    else if (act === 'child') addChild(id);
+    else if (act === 'del') deleteNode(id);
+    else if (act === 'dup') {
+      const c = addNode({ type: n.type, x: n.x + 30, y: n.y + 30, title: n.title + ' (cópia)' }); c.items = [...n.items];
+      P.edges.filter(e => e.to === id).forEach(e => P.edges.push({ id: uid(), from: e.from, to: c.id }));
+      selected = c.id; render(); persist();
+    }
+  });
+
+  // ---------- events: pointer (drag, pan, connect) ----------
+  let drag = null;
+  canvas.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0 && ev.pointerType === 'mouse') return;
+    const port = ev.target.closest('.port.out');
+    const nodeDiv = ev.target.closest('.node');
+    if (port) {
+      const n = getNode(nodeDiv.dataset.id);
+      drag = { kind: 'link', from: n.id, a: portPos(n, 'out') };
+    } else if (nodeDiv && !ev.target.closest('input,textarea,select,button')) {
+      const n = getNode(nodeDiv.dataset.id); setSelected(n.id);
+      const w = toWorld(ev.clientX, ev.clientY); drag = { kind: 'node', id: n.id, dx: w.x - n.x, dy: w.y - n.y, el: nodeDiv, moved: false };
+    } else if (nodeDiv) { setSelected(nodeDiv.dataset.id); return; }
+    else if (ev.target.closest('#edges g')) return;
+    else { setSelected(null); document.activeElement?.blur?.();
+      drag = { kind: 'pan', sx: ev.clientX, sy: ev.clientY, vx: P.view.x, vy: P.view.y }; canvas.classList.add('panning'); }
+    canvas.setPointerCapture(ev.pointerId); ev.preventDefault();
+  });
+  canvas.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    if (drag.kind === 'pan') { P.view.x = drag.vx + ev.clientX - drag.sx; P.view.y = drag.vy + ev.clientY - drag.sy; applyView(); }
+    else if (drag.kind === 'node') { const w = toWorld(ev.clientX, ev.clientY), n = getNode(drag.id);
+      n.x = Math.round(w.x - drag.dx); n.y = Math.round(w.y - drag.dy); drag.el.style.left = n.x + 'px'; drag.el.style.top = n.y + 'px'; drag.moved = true; drawEdges(); }
+    else if (drag.kind === 'link') {
+      drawEdges({ a: drag.a, b: toWorld(ev.clientX, ev.clientY) });
+      nodesEl.querySelectorAll('.drop-target').forEach(e => e.classList.remove('drop-target'));
+      const over = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.node');
+      if (over && over.dataset.id !== drag.from) over.classList.add('drop-target');
+    }
+  });
+  canvas.addEventListener('pointerup', ev => {
+    if (!drag) return;
+    if (drag.kind === 'link') {
+      nodesEl.querySelectorAll('.drop-target').forEach(e => e.classList.remove('drop-target'));
+      const over = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.node');
+      if (over) connect(drag.from, over.dataset.id);
+      else { // solto no vazio: cria um bloco novo ali já ligado
+        const w = toWorld(ev.clientX, ev.clientY), p = getNode(drag.from);
+        const n = addNode({ x: Math.round(w.x), y: Math.round(w.y - PORT_Y), type: p.type === 'root' ? 'pagina' : 'func' });
+        P.edges.push({ id: uid(), from: drag.from, to: n.id }); selected = n.id; render(); persist(); focusTitle(n.id);
+      }
+      drawEdges();
+    } else if (drag.kind === 'pan' || (drag.kind === 'node' && drag.moved)) persist();
+    canvas.classList.remove('panning'); drag = null;
+  });
+  canvas.addEventListener('pointercancel', () => { drag = null; canvas.classList.remove('panning'); drawEdges(); });
+
+  svg.addEventListener('click', ev => {
+    const g = ev.target.closest('g[data-edge]'); if (!g) return;
+    if (confirm('Remover esta ligação?')) { P.edges = P.edges.filter(e => e.id !== g.dataset.edge); drawEdges(); persist(); }
+  });
+  canvas.addEventListener('wheel', ev => { ev.preventDefault();
+    if (ev.ctrlKey || ev.metaKey || Math.abs(ev.deltaY) >= 40 && !ev.deltaX) zoomAt(ev.deltaY < 0 ? 1.1 : 1 / 1.1, ev.clientX, ev.clientY);
+    else { P.view.x -= ev.deltaX; P.view.y -= ev.deltaY; applyView(); persist(); }
+  }, { passive: false });
+  canvas.addEventListener('dblclick', ev => {
+    if (ev.target.closest('.node')) return;
+    const w = toWorld(ev.clientX, ev.clientY); const n = addNode({ x: Math.round(w.x - NODE_W / 2), y: Math.round(w.y - 20) });
+    selected = n.id; render(); persist(); focusTitle(n.id);
+  });
+
+  function setSelected(id) {
+    if (selected === id) return; selected = id;
+    nodesEl.querySelectorAll('.node').forEach(e => e.classList.toggle('selected', e.dataset.id === id));
+  }
+  document.addEventListener('keydown', ev => {
+    if (ev.target.closest('input,textarea,select')) return;
+    if ((ev.key === 'Delete' || ev.key === 'Backspace') && selected) deleteNode(selected);
+  });
+
+  // ---------- toolbar ----------
+  $('#projName').addEventListener('input', e => { P.name = e.target.value; P._autoName = null; persist(); });
+  $('#btnAdd').onclick = () => {
+    const r = canvas.getBoundingClientRect();
+    const sel = selected && getNode(selected);
+    if (sel) return addChild(sel.id);
+    const w = toWorld(r.left + r.width / 2, r.top + r.height / 2);
+    const n = addNode({ x: Math.round(w.x - NODE_W / 2), y: Math.round(w.y - 60) }); selected = n.id; render(); persist(); focusTitle(n.id);
+  };
+  $('#zIn').onclick = () => { const r = canvas.getBoundingClientRect(); zoomAt(1.2, r.left + r.width / 2, r.top + r.height / 2); };
+  $('#zOut').onclick = () => { const r = canvas.getBoundingClientRect(); zoomAt(1 / 1.2, r.left + r.width / 2, r.top + r.height / 2); };
+  $('#zFit').onclick = fit;
+
+  const open = id => $(id).classList.add('open');
+  document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => {
+    if (e.target === m || e.target.closest('[data-close]')) m.classList.remove('open'); }));
+
+  // Projetos
+  $('#btnProjects').onclick = () => { renderProjects(); open('#mProjects'); };
+  function renderProjects() {
+    db.projects[P.id] = P;
+    const list = Object.values(db.projects).sort((a, b) => b.updatedAt - a.updatedAt);
+    $('#projList').innerHTML = list.map(p => {
+      const root = p.nodes.find(n => n.type === 'root');
+      return `<div class="proj ${p.id === P.id ? 'current' : ''}" data-id="${p.id}">
+        <div class="meta"><b>${esc(p.name || 'Sem nome')}</b>
+        <small>${esc(root?.sub || 'sem nicho')} · ${p.nodes.length - 1} bloco(s) · ${new Date(p.updatedAt).toLocaleString('pt-BR')}</small></div>
+        <button class="btn" data-pact="del" title="Excluir projeto">🗑</button></div>`;
+    }).join('') || '<p>Nenhum projeto ainda.</p>';
+  }
+  $('#projList').addEventListener('click', e => {
+    const row = e.target.closest('.proj'); if (!row) return; const id = row.dataset.id;
+    if (e.target.closest('[data-pact="del"]')) {
+      if (!confirm(`Excluir o projeto "${db.projects[id].name}" definitivamente?`)) return;
+      delete db.projects[id];
+      if (id === P.id) { const rest = Object.values(db.projects).sort((a, b) => b.updatedAt - a.updatedAt); P = rest[0] || newProject(); render(); }
+      persist(); renderProjects(); return;
+    }
+    switchTo(db.projects[id]); $('#mProjects').classList.remove('open');
+  });
+  function switchTo(p) { clearTimeout(saveTimer); P = p; selected = null; render(); persist(); }
+  $('#btnNew').onclick = () => { switchTo(newProject()); $('#mProjects').classList.remove('open'); setTimeout(() => focusTitle(P.nodes[0].id), 50); };
+
+  // Exportar
+  $('#btnMore').onclick = () => open('#mMore');
+  function slug() { return (P.name || 'projeto').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w]+/g, '-').toLowerCase(); }
+  function download(name, text, type) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  function ordered() {
+    // percorre a partir do cliente, na ordem das ligações (de cima para baixo)
+    const root = P.nodes.find(n => n.type === 'root'); const seen = new Set(); const out = [];
+    const walk = (n, depth) => { if (seen.has(n.id)) return; seen.add(n.id); out.push({ n, depth });
+      P.edges.filter(e => e.from === n.id).map(e => getNode(e.to)).filter(Boolean).sort((a, b) => a.y - b.y).forEach(c => walk(c, depth + 1)); };
+    if (root) walk(root, 0);
+    P.nodes.filter(n => !seen.has(n.id)).sort((a, b) => a.y - b.y).forEach(n => walk(n, 1));
+    return out;
+  }
+  function toMarkdown() {
+    const list = ordered(); const root = list[0]?.n; let md = '';
+    md += `# ${root?.title || P.name}\n`;
+    if (root?.sub) md += `**Nicho:** ${root.sub}\n`;
+    md += `_Escopo gerado em ${new Date().toLocaleString('pt-BR')}_\n\n`;
+    const rootItems = (root?.items || []).filter(s => s.trim());
+    if (rootItems.length) md += `## Observações gerais\n${rootItems.map(s => `- ${s}`).join('\n')}\n\n`;
+    for (const { n, depth } of list.slice(1)) {
+      const h = '#'.repeat(Math.min(6, depth + 1));
+      md += `${h} ${n.title || '(sem título)'}  \`${TYPES[n.type]?.label || ''}\`\n`;
+      const its = n.items.filter(s => s.trim()); if (its.length) md += its.map(s => `- ${s}`).join('\n') + '\n';
+      md += '\n';
+    }
+    return md;
+  }
+  $('#exMd').onclick = () => { $('#mMore').classList.remove('open'); $('#mdOut').value = toMarkdown(); open('#mMd'); };
+  $('#mdCopy').onclick = async () => { try { await navigator.clipboard.writeText($('#mdOut').value); $('#mdCopy').textContent = 'Copiado ✓'; }
+    catch { $('#mdOut').select(); document.execCommand('copy'); $('#mdCopy').textContent = 'Copiado ✓'; } setTimeout(() => $('#mdCopy').textContent = 'Copiar', 1500); };
+  $('#mdDl').onclick = () => download(slug() + '.md', $('#mdOut').value, 'text/markdown');
+  $('#exJson').onclick = () => download(slug() + '.json', JSON.stringify(P, null, 2), 'application/json');
+  $('#imJson').onclick = () => $('#fileIn').click();
+  $('#fileIn').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const p = JSON.parse(await f.text()); if (!Array.isArray(p.nodes) || !Array.isArray(p.edges)) throw 0;
+      p.id = uid(); p.view = p.view || { x: 80, y: 80, z: 1 }; switchTo(p); $('#mMore').classList.remove('open'); }
+    catch { alert('Arquivo inválido.'); }
+    e.target.value = '';
+  };
+  $('#dup').onclick = () => {
+    const c = JSON.parse(JSON.stringify(P)); c.id = uid(); c.name = (P.name || 'Projeto') + ' (modelo)'; c._autoName = null; c.createdAt = Date.now();
+    switchTo(c); $('#mMore').classList.remove('open');
+  };
+  $('#exPrint').onclick = () => {
+    const list = ordered(), root = list[0]?.n;
+    let h = `<h1>${esc(root?.title || P.name)}</h1>${root?.sub ? `<div><b>Nicho:</b> ${esc(root.sub)}</div>` : ''}`;
+    const ri = (root?.items || []).filter(s => s.trim());
+    if (ri.length) h += `<h2>Observações gerais</h2><ul>${ri.map(s => `<li>${esc(s)}</li>`).join('')}</ul>`;
+    for (const { n, depth } of list.slice(1)) {
+      h += `<div style="margin-left:${(depth - 1) * 20}px"><h2>${esc(n.title || '(sem título)')} <span class="tag">${TYPES[n.type]?.label || ''}</span></h2>
+        <ul>${n.items.filter(s => s.trim()).map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>`;
+    }
+    $('#printView').innerHTML = h; $('#mMore').classList.remove('open'); setTimeout(() => window.print(), 50);
+  };
+
+  // ---------- init ----------
+  render();
+  if (!db.projects[P.id]) persist();
+  if (!P.nodes[0].title) focusTitle(P.nodes[0].id);
+})();
+</script>
+</body>
+</html>
