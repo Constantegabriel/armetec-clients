@@ -5,6 +5,8 @@ O bloco inicial é o cliente (empresa + nicho). Dele saem blocos ligados: págin
 integrações e observações, cada um com sua lista do que vai conter. Tudo fica salvo na nuvem,
 com login, e abre de qualquer notebook.
 
+> Também neste repositório: [`catalogo/`](catalogo/README.md), um site de catálogo com carrinho e pedido pelo WhatsApp.
+
 ## Como usar
 
 | Ação | Como |
