@@ -12,7 +12,6 @@ export const RemotionRoot: React.FC = () => (
       fps={FPS}
       width={FORMATS.vertical.width}
       height={FORMATS.vertical.height}
-      defaultProps={{subtitles: true}}
     />
     <Composition
       id={FORMATS.horizontal.id}
@@ -21,7 +20,6 @@ export const RemotionRoot: React.FC = () => (
       fps={FPS}
       width={FORMATS.horizontal.width}
       height={FORMATS.horizontal.height}
-      defaultProps={{subtitles: true}}
     />
   </>
 );

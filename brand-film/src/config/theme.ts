@@ -15,19 +15,24 @@ export const COLORS = {
 } as const;
 
 export const FONTS = {
-  /** Body / UI / subtitles */
+  /** Body / UI */
   sans: "'Inter Variable', 'Inter', system-ui, sans-serif",
-  /** Display / kinetic type */
-  display: "'Space Grotesk Variable', 'Inter Variable', sans-serif",
+  /** Display / kinetic typography — Geist (Vercel), clean and high-impact */
+  display: "'Geist Variable', 'Inter Variable', sans-serif",
+  /** Technical accents (eyebrows, numbers) */
+  grotesk: "'Space Grotesk Variable', 'Inter Variable', sans-serif",
   mono: "'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace",
 } as const;
 
 export const FONT_FILES = [
   {family: 'Inter Variable', file: 'fonts/Inter-Variable.woff2', weight: '100 900'},
+  {family: 'Geist Variable', file: 'fonts/Geist-Variable.woff2', weight: '100 900'},
   {family: 'Space Grotesk Variable', file: 'fonts/SpaceGrotesk-Variable.woff2', weight: '300 700'},
 ] as const;
 
-/** Heavy display face used for the extruded 3D typography (OFL, Inter Display). */
-export const FONT_3D = 'fonts/InterDisplay-Black.otf';
-/** Refined display face for the monumental words (PROBLEMAS, CRESCIMENTO, CRESCER). */
-export const FONT_3D_REFINED = 'fonts/InterDisplay-SemiBold.otf';
+/**
+ * Outline source for the particle dissolve (PROBLEMAS → CRESCIMENTO). Same face
+ * as the DOM display type, so particles leave/land exactly on the glyphs.
+ * (No extruded typography anywhere in the film.)
+ */
+export const FONT_OUTLINE = 'fonts/Geist-SemiBold.ttf';

@@ -1,23 +1,18 @@
 import React, {useMemo} from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
-import * as THREE from 'three';
-import {camPath, shake, type CamKey} from '../animations/camera';
+import {camSmooth, shake, type SmoothKey} from '../animations/camera';
 import {combine, dissolveOut, dropIn, focusIn, riseIn} from '../animations/kinetic';
 import {CssWorld} from '../components/CssWorld';
 import {LightStreak} from '../components/Light';
 import {CAL} from '../config/staging';
 import {COLORS, FONTS} from '../config/theme';
 import {Clock3D} from '../three/Clock3D';
-import {useExtruded, useOutlines} from '../three/ExtrudedText';
-import type {TextOutline} from '../three/fontShapes';
-import {MAT} from '../three/materials';
 import {TimeRings} from '../three/TimeRings';
 import {Stage} from '../three/Stage';
 import {SplitText} from '../typography/SplitText';
 import {TimeDebris} from '../interfaces/TimeDebris';
 import {EASE} from '../utils/easing';
 import {useLayout} from '../utils/layout';
-import {clamp} from '../utils/math';
 import {beat, prog, sec} from '../utils/time';
 
 /**
@@ -38,54 +33,35 @@ export const clockTime = (f: number) => {
   return base + 3600 * 9 * Math.pow(k, 2.6); // ~9h of spin by the end of scene 2
 };
 
-const TEMPO_SIZE = 200;
-const TEMPO_Z = 1000;
-
-/** Camera choreography (CSS px, clock at origin, dial radius 400). */
-const useCamera = (f: number, vertical: boolean) => {
-  const back = vertical ? 3500 : 2600;
-  const focusT = back - TEMPO_Z;
-  const keys: CamKey[] = [
-    // macro: grazing over the dial at the 2–3 o'clock indices (100mm)
+/** Camera choreography (CSS px, clock at origin, dial radius 400). Velocity-continuous rig. */
+const useCamera = (vertical: boolean): SmoothKey[] => {
+  const back = vertical ? 3000 : 2350;
+  const acc = beat('s02_accelerate');
+  const zoom = beat('s02_calZoom');
+  const end = sec(12);
+  return [
     // low, grazing macro from the lower right: bezel and rehaut in the foreground, star bridge beyond
     {f: 0, pos: vertical ? [560, 470, 300] : [640, 420, 280], target: [-40, -60, 0], lens: 50, aperture: 2.6, focus: 640},
-    {f: beat('s01_wDoSeu'), pos: vertical ? [470, 520, 380] : [560, 470, 360], target: [-90, -40, 0], lens: 45, aperture: 2.2, focus: 700, ease: EASE.inOut},
-    // pull-back reveal for TEMPO
-    {f: beat('s01_wTempo') + 8, pos: [-420, 120, back + 500], target: [0, 0, 0], lens: 50, focus: focusT + 500, aperture: 0.5, ease: EASE.dolly},
-    {f: beat('s01_flyThrough'), pos: [-160, 40, back], target: [0, 0, 0], lens: 50, focus: focusT, aperture: 0.5, ease: EASE.inOut},
+    {f: beat('s01_wDoSeu'), pos: vertical ? [480, 500, 360] : [560, 460, 340], target: [-80, -50, 0], lens: 46, aperture: 2.2, focus: 690},
+    // rise and pull back to a frontal, centred dial for TEMPO
+    {f: beat('s01_wTempo') + 30, pos: [-60, 30, back], target: [0, 0, 0], lens: 50, aperture: 0.6},
+    {f: beat('s01_flyThrough'), pos: [-20, 10, back - 260], target: [0, 0, 0], lens: 50, aperture: 0.6},
+    // through the counter of the O, onto the dial centre
+    {f: acc + 6, pos: [30, 0, 520], target: [0, 0, 0], lens: 35, aperture: 1.2},
+    // continuous pull-back while time accelerates; settles to rest
+    {f: zoom, pos: [-240, 220, 5000], target: [-80, 40, 0], lens: 35, roll: -3, aperture: 0.8, stop: true},
+    // smooth crane-in towards the calendar: accelerate, glide, decelerate into it
+    {f: zoom + 52, pos: [-430, -150, 3900], target: [CAL.x, CAL.y, CAL.z], lens: 35, roll: -1, aperture: 0.7},
+    {f: end, pos: [CAL.x, CAL.y, CAL.z + 520], target: [CAL.x, CAL.y, CAL.z], lens: 35, roll: 0, aperture: 0.5, stop: true},
   ];
-  return keys;
 };
 
 export const S01S02Time: React.FC<{from: number}> = ({from}) => {
   const f = useCurrentFrame() + from;
   const L = useLayout();
-  // all glyph outlines are resolved before the WebGL stage mounts
-  const outlines = useOutlines(['TEMPO', '?', 'T', 'E', 'M', 'P', 'O'], TEMPO_SIZE);
-  const tempoOutline = outlines?.[0] ?? null;
-
-  // O counter centre (fly-through target)
-  const oBox = tempoOutline?.glyphs[4];
-  const oX = oBox ? (oBox.x1 + oBox.x2) / 2 : 300;
-  const oY = oBox ? (oBox.y1 + oBox.y2) / 2 : 0;
-
-  const keys = useCamera(f, L.vertical);
-  const fly = beat('s01_flyThrough');
   const acc = beat('s02_accelerate');
   const end = sec(12);
-  const back = keys[3].pos[2];
-  keys.push(
-    // push through the counter of the "O"
-    {f: fly + 40, pos: [oX, oY, TEMPO_Z - 120], target: [oX * 0.6, oY, 0], lens: 35, aperture: 0.6, ease: EASE.in},
-    // arrive at the dial centre (match on the cap)
-    {f: acc + 6, pos: [40, 0, 520], target: [0, 0, 0], lens: 35, aperture: 1.2, ease: EASE.out},
-    // continuous pull-back reveal while time accelerates
-    {f: end - 50, pos: [-220, 260, 5200], target: [0, 120, 0], lens: 35, roll: -4, aperture: 0.8, ease: EASE.inOut},
-    // whip into the calendar that becomes the spreadsheet (scene 3 match cut)
-    {f: end, pos: [CAL.x, CAL.y, CAL.z + 760], target: [CAL.x, CAL.y, CAL.z], lens: 35, aperture: 0.5, ease: EASE.in},
-  );
-  void back;
-  const cam = camPath(f, keys, 3);
+  const cam = camSmooth(f, useCamera(L.vertical), 3);
   const sk = shake(f, beat('s02_wPerde'), 10, 16);
   cam.x += sk.x;
   cam.y += sk.y;
@@ -96,11 +72,6 @@ export const S01S02Time: React.FC<{from: number}> = ({from}) => {
   const keyX = -9 + reveal * 14;
   const fillLevel = 0.05 + prog(f, beat('s01_wTempo') - 10, beat('s01_wTempo') + 30) * 0.5;
 
-  // TEMPO lifecycle
-  const tempoIn = prog(f, beat('s01_wTempo'), beat('s01_wTempo') + 26, EASE.out);
-  const tempoBreak = prog(f, fly + 34, fly + 90, EASE.in);
-
-  if (!outlines) return null;
   return (
     <AbsoluteFill style={{background: COLORS.black}}>
       <Stage
@@ -130,7 +101,6 @@ export const S01S02Time: React.FC<{from: number}> = ({from}) => {
         <directionalLight position={[3, 4, 12]} intensity={fillLevel * 2.4} />
         <Clock3D time={clockTime(f)} ticking={f < acc} />
         <TimeRings f={f} start={acc} />
-        <TempoWord f={f} outlines={outlines} appear={tempoIn} breakT={tempoBreak} />
       </Stage>
 
       {/* DOM layer in the same camera space: words of scene 1 + time debris of scene 2 */}
@@ -138,6 +108,7 @@ export const S01S02Time: React.FC<{from: number}> = ({from}) => {
         <TimeDebris f={f} start={acc - 10} end={end} />
       </CssWorld>
       <MacroWords f={f} />
+      <TempoTitle f={f} />
 
       {/* the first line of light */}
       <LightStreak
@@ -151,72 +122,6 @@ export const S01S02Time: React.FC<{from: number}> = ({from}) => {
   );
 };
 
-
-const TempoWord: React.FC<{
-  f: number;
-  outlines: TextOutline[];
-  appear: number;
-  breakT: number;
-}> = ({f, outlines, appear, breakT}) => {
-  const L = useLayout();
-  const scale = 1;
-  void L;
-  const [word, q, ...chars] = outlines;
-  // per-letter meshes (positioned from the kerned word layout) so it can break apart
-  return (
-    <group position={[0, 0, TEMPO_Z / 100]} scale={scale}>
-      {word.glyphs.map((g, i) => (
-        <TempoLetter key={i} outline={chars[i]} cx={(g.x1 + g.x2) / 2} cy={(g.y1 + g.y2) / 2} i={i} f={f} appear={appear} breakT={breakT} />
-      ))}
-      <TempoLetter
-        outline={q}
-        cx={word.width / 2 + 40 + q.width / 2}
-        cy={word.height / 2 - q.height / 2}
-        i={5}
-        f={f}
-        appear={appear}
-        breakT={breakT}
-        accent
-      />
-    </group>
-  );
-};
-
-const TempoLetter: React.FC<{outline: TextOutline; cx: number; cy: number; i: number; f: number; appear: number; breakT: number; accent?: boolean}> = ({
-  outline,
-  cx,
-  cy,
-  i,
-  f,
-  appear,
-  breakT,
-  accent,
-}) => {
-  const geo = useExtruded(outline, {depth: 120, bevel: 6, bevelSegments: 4});
-  const mats = useMemo<[THREE.Material, THREE.Material]>(
-    () => (accent ? [MAT.accent(), MAT.sideMetal()] : [MAT.satinWhite(), MAT.blackMetal()]),
-    [accent],
-  );
-  if (!geo || appear <= 0) return null;
-  // staggered arrival from depth, then radial break-away after the camera passes
-  const a = clamp(appear * 1.4 - i * 0.08);
-  const zIn = (1 - EASE.out(a)) * -900;
-  const dir = Math.sign(cx || 1);
-  const bx = breakT * dir * (500 + i * 60);
-  const by = breakT * (i % 2 === 0 ? -1 : 1) * 260;
-  const bz = breakT * 600;
-  void f;
-  return (
-    <mesh
-      geometry={geo}
-      material={mats}
-      position={[(cx + bx) / 100, -(cy + by) / 100, (zIn + bz) / 100]}
-      rotation={[breakT * 0.6 * dir, breakT * 0.9 * dir, 0]}
-      scale={0.6 + 0.4 * EASE.out(a)}
-      castShadow
-    />
-  );
-};
 
 /**
  * Scene 1 words — appear on each tick in layered depth. The newest word is in
@@ -368,6 +273,93 @@ const Scene02Type: React.FC<{f: number}> = ({f}) => {
           })}
         </div>
       </div>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * "TEMPO?" — the central concept. No extrusion: a heavy, tightly-spaced Geist
+ * word revealed by a sweeping hand of light (a conic mask turning 360° from the
+ * dial centre, like a seconds hand drawing the word into existence). It then
+ * settles with a slow optical push; the "?" lands on the next tick in brand
+ * blue. Finally the camera dives through the counter of the "O".
+ */
+const TempoTitle: React.FC<{f: number}> = ({f}) => {
+  const L = useLayout();
+  const T = beat('s01_wTempo');
+  const F = beat('s01_flyThrough');
+  const size = (L.vertical ? 236 : 250) * L.u;
+  const tracking = -0.045 + 0.02 * (1 - EASE.out(prog(f, T, T + 150, EASE.linear)));
+  const qGap = 0.06 * size;
+  // measure glyph advances to find the counter of the O (fly-through origin)
+  const m = useMemo(() => {
+    const c = document.createElement('canvas').getContext('2d')!;
+    c.font = `800 ${size}px "Geist Variable"`;
+    (c as unknown as {letterSpacing: string}).letterSpacing = `${tracking * size}px`;
+    const temp = c.measureText('TEMP').width;
+    const o = c.measureText('O').width;
+    const word = c.measureText('TEMPO').width;
+    const q = c.measureText('?').width;
+    return {temp, o, word, q};
+  }, [size, tracking]);
+  if (f < T - 2 || f > F + 50) return null;
+  const total = m.word + qGap + m.q;
+  const oX = -total / 2 + m.temp + m.o / 2;
+  const sweep = EASE.inOut(prog(f, T, T + 54, EASE.linear));
+  const angle = sweep * 360;
+  const settle = 1.05 - 0.05 * EASE.out(prog(f, T, T + 160, EASE.linear));
+  const qIn = EASE.out(prog(f, T + 54, T + 84, EASE.linear));
+  const dive = EASE.in(prog(f, F, F + 46, EASE.linear));
+  const scale = settle * (1 + dive * 46);
+  const fade = 1 - prog(f, F + 26, F + 46, EASE.linear);
+  const mask = sweep >= 1 ? undefined : `conic-gradient(from 0deg at 50% 50%, #000 0deg, #000 ${angle}deg, transparent ${angle + 0.5}deg)`;
+  const handOpacity = Math.sin(Math.min(1, sweep) * Math.PI) * (sweep < 1 ? 1 : 0);
+  const scrim = prog(f, T - 10, T + 30, EASE.out) * fade;
+  return (
+    <AbsoluteFill style={{pointerEvents: 'none'}}>
+      {/* localized darkening: the dial recedes behind the word */}
+      <AbsoluteFill style={{background: `radial-gradient(ellipse 60% 26% at 50% 50%, rgba(0,0,0,${0.72 * scrim}), rgba(0,0,0,${0.35 * scrim}) 55%, transparent 80%)`}} />
+      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            fontFamily: FONTS.display,
+            fontWeight: 800,
+            fontSize: size,
+            lineHeight: 1,
+            letterSpacing: `${tracking}em`,
+            color: COLORS.white,
+            transform: `scale(${scale})`,
+            transformOrigin: `calc(50% + ${oX}px) 50%`,
+            opacity: fade,
+            filter: dive > 0.02 ? `blur(${Math.min(18, dive * 26)}px)` : undefined,
+            maskImage: mask,
+            WebkitMaskImage: mask,
+            textShadow: '0 18px 60px rgba(0,0,0,0.55)',
+          }}
+        >
+          <span>TEMPO</span>
+          <span
+            style={{
+              marginLeft: qGap,
+              color: COLORS.accent,
+              display: 'inline-block',
+              clipPath: 'inset(-0.2em -0.2em -0.15em -0.2em)',
+            }}
+          >
+            <span style={{display: 'inline-block', transform: `translateY(${(1 - qIn) * 1.05}em)`, opacity: qIn}}>?</span>
+          </span>
+        </div>
+      </AbsoluteFill>
+      {/* the hand of light that draws the word */}
+      {handOpacity > 0.01 ? (
+        <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', mixBlendMode: 'screen'}}>
+          <div style={{position: 'absolute', left: '50%', top: '50%', width: 0, height: 0, transform: `rotate(${angle}deg)`}}>
+            <div style={{position: 'absolute', left: -1.5, bottom: 0, width: 3, height: Math.hypot(L.width, L.height) / 2, background: `linear-gradient(0deg, ${COLORS.accent}00, ${COLORS.accentSoft} 30%, #ffffff)`, opacity: handOpacity, boxShadow: `0 0 24px ${COLORS.accent}`}} />
+          </div>
+        </AbsoluteFill>
+      ) : null}
     </AbsoluteFill>
   );
 };

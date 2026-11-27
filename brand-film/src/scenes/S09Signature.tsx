@@ -12,7 +12,7 @@ import {clamp} from '../utils/math';
 import {beat, prog, sec} from '../utils/time';
 
 /**
- * SCENE 08 — the logo is *constructed*.
+ * SCENE 09 — the logo is *constructed*.
  *  1. a line of light crosses the frame; geometric construction guides draw
  *     across the whole frame (they fill the safe margins without carrying info);
  *  2. the three orbits of the official symbol are traced in light, one by one;
@@ -21,12 +21,12 @@ import {beat, prog, sec} from '../utils/time';
  *  5. hold for recall, then absolute black.
  * Paths are vectorised from the official logo files (public/brand).
  */
-const FADE = beat('s08_fade');
-const LINE = beat('s08_lightLine');
-const LOGO = beat('s08_logo');
-const SLOGAN = beat('s08_slogan');
-const BLACK = beat('s08_black');
-const END = sec(70);
+const FADE = beat('s09_fade');
+const LINE = beat('s09_lightLine');
+const LOGO = beat('s09_logo');
+const SLOGAN = beat('s09_slogan');
+const BLACK = beat('s09_black');
+const END = sec(99);
 
 const PIECES = SYMBOL_PATH.d.split(/(?=M )/).map((d) => d.trim());
 const SW = SYMBOL_PATH.width;
@@ -159,7 +159,7 @@ const Wordmark: React.FC<{f: number; height: number}> = ({f, height}) => {
   );
 };
 
-export const S08Signature: React.FC<{from: number}> = ({from}) => {
+export const S09Signature: React.FC<{from: number}> = ({from}) => {
   const f = useCurrentFrame() + from;
   const L = useLayout();
   const s = L.u;

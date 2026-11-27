@@ -177,6 +177,8 @@ export const Plane: React.FC<PlaneProps> = ({w, h, children, style, opacity = 1,
           ? `translate3d(${t.x ?? 0}px, ${t.y ?? 0}px, ${t.z ?? 0}px) rotateY(${cam.yaw}deg) rotateX(${cam.pitch}deg) scale(${t.scale ?? 1})`
           : tf(t),
         opacity: o,
+        // planes are one-sided (device back plates only show from behind)
+        backfaceVisibility: 'hidden',
         filter: b > 0.35 ? `blur(${b.toFixed(2)}px)` : undefined,
         ...style,
       }}

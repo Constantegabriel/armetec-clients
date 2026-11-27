@@ -9,6 +9,4 @@ export const EFFECTS = {
   typeMotionBlur: 0.35,
   /** Bokeh post-process in WebGL scenes. */
   webglDof: true,
-  /** Subtitle layer (complete narration, synchronized). */
-  subtitles: true,
 } as const;

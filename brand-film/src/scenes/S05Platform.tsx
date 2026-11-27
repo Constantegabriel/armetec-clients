@@ -1,17 +1,16 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
-import {camPath, type CamKey} from '../animations/camera';
-import {combine, dissolveOut, focusIn, riseIn} from '../animations/kinetic';
+import {camSmooth, type CamKey} from '../animations/camera';
 import {CssWorld, Plane} from '../components/CssWorld';
 import {VolumetricBeams} from '../components/Light';
-import {COLORS} from '../config/theme';
+import {COLORS, FONTS} from '../config/theme';
 import {OrderedTile, TILE, gridSlots} from '../interfaces/OrderedTile';
 import {AppShell, AutomationFlow, Centralize, ModuleWindow, ProcessFlow} from '../interfaces/Platform';
-import {SplitText} from '../typography/SplitText';
+import {Title, eyebrow, keyline, type TitleLine} from '../typography/Title';
 import {EASE} from '../utils/easing';
 import {useLayout} from '../utils/layout';
 import {clamp, lerp} from '../utils/math';
-import {beat, prog, sec} from '../utils/time';
+import {beat, prog} from '../utils/time';
 
 /**
  * SCENE 05 — the ArmeTec platform. The ordered tiles of the turn dock into a
@@ -22,7 +21,7 @@ const S5 = beat('s05_platform');
 const SIMP = beat('s05_simplificam');
 const CENT = beat('s05_centralizam');
 const AUTO = beat('s05_automatizam');
-const END = sec(47);
+const END = beat('s06');
 
 const GAP = 3200;
 
@@ -50,7 +49,8 @@ const useCam = (f: number, vertical: boolean) => {
     {f: END - 40, pos: [GAP * 3 + 40, ty, d + 20], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8, ease: EASE.inOut},
     {f: END + 20, pos: [GAP * 3, ty, d], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8, ease: EASE.inOut},
   ];
-  return camPath(f, keys, 2);
+  // velocity-continuous rig: no speed jumps between stations
+  return camSmooth(f, keys.map(({ease: _e, ...k}) => k), 2);
 };
 
 /** Tiles from scene 04 dock into the platform sidebar. */
@@ -74,38 +74,15 @@ const DockingTiles: React.FC<{f: number; vertical: boolean; shell: {w: number; h
   );
 };
 
-const Headline: React.FC<{f: number; at: number; out: number; num?: string; a: string; b: string; strongFirst?: boolean}> = ({f, at, out, num, a, b, strongFirst = true}) => {
+/** Section heading: number + key word + complement, with a local light falloff for contrast. */
+const Headline: React.FC<{f: number; at: number; out: number; num?: string; a: string; b: string}> = ({f, at, out, num, a, b}) => {
   const L = useLayout();
-  const s = L.u;
-  if (f < at - 5 || f > out + 30) return null;
-  const top = L.vertical ? -L.height / 2 + L.safe.top + 70 * s : -L.height / 2 + 110 * s;
-  return (
-    <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
-      <div style={{position: 'absolute', transform: `translateY(${top}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-        {num ? (
-          <div style={{fontFamily: 'inherit', opacity: prog(f, at, at + 14) * (1 - prog(f, out, out + 12))}}>
-            <SplitText text={num} size={22 * s} weight={500} tracking={0.4} color={COLORS.accentSoft} state={() => ({})} />
-          </div>
-        ) : null}
-        <SplitText
-          text={a}
-          size={(L.vertical ? 96 : 84) * s}
-          weight={strongFirst ? 700 : 300}
-          tracking={strongFirst ? -0.01 : 0.18}
-          state={combine(riseIn(f, at, {stagger: 1.6}), dissolveOut(f, out, {stagger: 0.6}))}
-          prevState={combine(riseIn(f - 1, at, {stagger: 1.6}), dissolveOut(f - 1, out, {stagger: 0.6}))}
-        />
-        <SplitText
-          text={b}
-          size={(L.vertical ? 46 : 42) * s}
-          weight={strongFirst ? 300 : 700}
-          tracking={0.24}
-          color={COLORS.gray}
-          state={combine(focusIn(f, at + 12, {spread: 0.3}), dissolveOut(f, out + 2, {stagger: 0.5}))}
-        />
-      </div>
-    </AbsoluteFill>
-  );
+  const v = L.vertical;
+  const lines: TitleLine[] = [];
+  if (num) lines.push({text: num, size: 22, weight: 500, tracking: 0.4, color: COLORS.accentSoft, mode: 'focus', family: FONTS.sans});
+  lines.push(keyline(a, v ? 100 : 88));
+  lines.push({...eyebrow(b, v ? 38 : 34), delay: 14});
+  return <Title f={f} at={at} out={out} anchor="top" offset={v ? -40 : -30} lines={lines} />;
 };
 
 export const S05Platform: React.FC<{from: number}> = ({from}) => {

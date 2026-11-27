@@ -1,13 +1,10 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
-import {camPath, shake} from '../animations/camera';
+import {camSmooth} from '../animations/camera';
 import {combine, dissolveOut, focusIn, riseIn} from '../animations/kinetic';
-import {COLORS, FONT_3D_REFINED, FONTS} from '../config/theme';
+import {COLORS, FONTS} from '../config/theme';
 import {TaskItem} from '../interfaces/WorkItems';
 import {Clock3D} from '../three/Clock3D';
-import {useExtruded, useOutlines} from '../three/ExtrudedText';
-import type {TextOutline} from '../three/fontShapes';
-import {MAT} from '../three/materials';
 import {Stage} from '../three/Stage';
 import {SplitText} from '../typography/SplitText';
 import {EASE} from '../utils/easing';
@@ -17,16 +14,16 @@ import {hash01} from '../utils/random';
 import {beat, prog, sec} from '../utils/time';
 
 /**
- * SCENE 07 — the climax. Each benefit has its own visual language:
+ * SCENE 08 — the climax. Each benefit has its own visual language:
  * MENOS contracts, CONTROLE aligns, PRODUTIVIDADE rises, and the clock from
  * the opening returns — calm now — for MAIS TEMPO PARA CRESCER.
  */
-const MENOS = beat('s07_menos');
-const CONTROLE = beat('s07_controle');
-const PROD = beat('s07_produtividade');
-const TEMPO = beat('s07_tempo');
-const CRESCER = beat('s07_crescer');
-const END = sec(64);
+const MENOS = beat('s08_menos');
+const CONTROLE = beat('s08_controle');
+const PROD = beat('s08_produtividade');
+const TEMPO = beat('s08_tempo');
+const CRESCER = beat('s08_crescer');
+const END = sec(93);
 
 /* --------------------------------- MENOS ---------------------------------- */
 const MenosTarefas: React.FC<{f: number}> = ({f}) => {
@@ -61,10 +58,10 @@ const MenosTarefas: React.FC<{f: number}> = ({f}) => {
       <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY - (L.vertical ? 470 : 290) * s}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
         <SplitText
           text="MENOS"
-          family={FONTS.sans}
+          family={FONTS.display}
           size={(L.vertical ? 210 : 190) * s}
-          weight={900}
-          tracking={-0.04}
+          weight={800}
+          tracking={-0.05}
           state={(i, n) => ({x: (i - (n - 1) / 2) * (1 - c) * 120 * s, sx: 1 + (1 - c) * 0.6, opacity: clamp((f - MENOS) / 6), blur: (1 - c) * 8})}
           prevState={(i, n) => {
             const c1 = EASE.out(prog(f - 1, MENOS, MENOS + 34, EASE.linear));
@@ -199,52 +196,69 @@ const MaisProdutividade: React.FC<{f: number}> = ({f}) => {
 };
 
 /* ------------------------- MAIS TEMPO PARA CRESCER ------------------------- */
-const CrescerWord: React.FC<{outline: TextOutline; f: number}> = ({outline, f}) => {
-  const geo = useExtruded(outline, {depth: 40, bevel: 2.5});
-  if (!geo) return null;
-  const a = EASE.out(prog(f, CRESCER, CRESCER + 40, EASE.linear));
-  // growth: the word rises and scales with a slow, confident push
-  const grow = 0.86 + 0.14 * a + prog(f, CRESCER + 40, END + 30, EASE.linear) * 0.05;
-  return <mesh geometry={geo} material={[MAT.satinWhite(), MAT.sideMetal()]} position={[0, -0.6 - (1 - a) * 2.4, 8]} rotation={[(1 - a) * 0.6, 0, 0]} scale={grow} visible={f >= CRESCER} />;
-};
-
+/**
+ * The opening timepiece returns — calm, real time, organised. The dial falls
+ * into soft focus and shadow while CRESCER rises out of a baseline mask
+ * (growth as motion), with a long, slow optical push to hold the moment.
+ */
 const TempoCrescer: React.FC<{f: number}> = ({f}) => {
   const L = useLayout();
   const s = L.u;
-  const outlines = useOutlines(['CRESCER'], L.vertical ? 210 : 240, 0.04, FONT_3D_REFINED);
-  if (!outlines || f < TEMPO - 16) return null;
+  if (f < TEMPO - 16) return null;
   const k = f - TEMPO;
-  const cam = camPath(f, [
-    {f: TEMPO - 16, pos: [-900, -300, 2600], target: [0, 0, 0], lens: 35, aperture: 0.5, focus: 1850},
-    {f: END + 40, pos: [420, -160, L.vertical ? 2900 : 2300], target: [0, 60, 300], lens: 35, aperture: 0.5, focus: (L.vertical ? 2900 : 2300) - 800, ease: EASE.out},
+  const cam = camSmooth(f, [
+    {f: TEMPO - 16, pos: [-900, -300, 2600], target: [0, 0, 0], lens: 35, aperture: 0.6},
+    {f: END + 40, pos: [380, -140, L.vertical ? 2600 : 2100], target: [0, 40, 0], lens: 35, aperture: 1.4, focus: 900},
   ]);
-  const sk = shake(f, CRESCER, 6, 14);
-  cam.x += sk.x;
-  cam.y += sk.y;
   const inA = prog(f, TEMPO - 16, TEMPO + 10, EASE.out);
   // calm, real-time clock (no longer accelerated)
   const time = 10 * 3600 + 10 * 60 + 2 + k / 60;
+  const rise = EASE.out(prog(f, CRESCER, CRESCER + 50, EASE.linear));
+  const pool = prog(f, CRESCER - 30, CRESCER + 10, EASE.out);
+  const push = 1 + prog(f, CRESCER, END + 40, EASE.linear) * 0.06;
+  const size = (L.vertical ? 220 : 250) * s;
   return (
     <AbsoluteFill style={{opacity: inA}}>
-      <Stage cam={cam} background={COLORS.black} fog={{color: COLORS.black, near: 3000, far: 9000}} envIntensity={0.55} dof={{aperture: 0.0016, maxBlur: 0.01}}>
+      <Stage cam={cam} background={COLORS.black} fog={{color: COLORS.black, near: 3000, far: 9000}} envIntensity={0.5} dof={{aperture: 0.0016 * (cam.aperture ?? 1), maxBlur: 0.012}}>
         <ambientLight intensity={0.08} />
         <spotLight position={[-6, 6, 7]} angle={0.6} penumbra={1} intensity={60} decay={1.3} castShadow />
         <directionalLight position={[5, 3, 9]} intensity={1.4} />
         <directionalLight position={[-3, 8, -6]} intensity={1.2} color="#c9d2ff" />
-        <pointLight position={[0, -6, 4]} intensity={12} color={COLORS.accent} decay={1.2} />
         <Clock3D time={time} ticking />
-        <CrescerWord outline={outlines[0]} f={f} />
       </Stage>
+      {/* the dial recedes into shadow behind the word */}
+      <AbsoluteFill style={{background: `radial-gradient(ellipse ${L.vertical ? 95 : 62}% ${L.vertical ? 26 : 38}% at 50% ${50 + ((L.safeCenterY + 40 * s) / L.height) * 100}%, rgba(0,0,0,${0.82 * pool}), rgba(0,0,0,${0.5 * pool}) 55%, transparent 100%)`}} />
       <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
-        <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY - (L.vertical ? 330 : 250) * s}px)`}}>
-          <SplitText text="MAIS TEMPO PARA" size={(L.vertical ? 58 : 54) * s} weight={300} tracking={0.34} state={combine(riseIn(f, TEMPO, {stagger: 1.4}), dissolveOut(f, END + 30))} style={{textShadow: '0 10px 40px rgba(0,0,0,0.9)'}} />
+        <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY - (L.vertical ? 150 : 140) * s}px)`}}>
+          <SplitText text="MAIS TEMPO PARA" family={FONTS.sans} size={(L.vertical ? 44 : 42) * s} weight={400} tracking={0.32} color="#D4D4D8" state={combine(riseIn(f, TEMPO, {stagger: 1.4}), dissolveOut(f, END + 30))} />
+        </div>
+        <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY + 40 * s}px) scale(${push})`}}>
+          <div style={{clipPath: 'inset(-0.3em -1em -0.2em -1em)'}}>
+            <div
+              style={{
+                fontFamily: FONTS.display,
+                fontWeight: 750,
+                fontSize: size,
+                letterSpacing: `${-0.045 + 0.015 * (1 - rise)}em`,
+                lineHeight: 1,
+                color: COLORS.white,
+                transform: `translateY(${(1 - rise) * 1.05}em)`,
+                opacity: f >= CRESCER ? 1 : 0,
+                filter: rise < 0.98 ? `blur(${(1 - rise) * 6}px)` : undefined,
+              }}
+            >
+              CRESCER
+            </div>
+          </div>
+          {/* a single line of brand light grows under the word */}
+          <div style={{height: 3 * s, marginTop: 18 * s, background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)`, transform: `scaleX(${EASE.inOut(prog(f, CRESCER + 20, CRESCER + 80, EASE.linear))})`}} />
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
-export const S07Results: React.FC<{from: number}> = ({from}) => {
+export const S08Results: React.FC<{from: number}> = ({from}) => {
   const f = useCurrentFrame() + from;
   return (
     <AbsoluteFill style={{background: COLORS.black}}>

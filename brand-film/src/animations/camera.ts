@@ -71,3 +71,58 @@ export const shake = (frame: number, at: number, amp = 12, decay = 18) => {
   const k = Math.exp(-d / decay) * amp;
   return {x: (noise1(d / 3, 5) - 0.5) * 2 * k, y: (noise1(d / 3, 9) - 0.5) * 2 * k, r: (noise1(d / 4, 13) - 0.5) * k * 0.05};
 };
+
+/* ------------------------------------------------------------------------- */
+/*  Velocity-continuous camera (cinematic dolly / crane rig)                  */
+/* ------------------------------------------------------------------------- */
+
+export type SmoothKey = Omit<CamKey, 'ease'> & {
+  /** the rig comes to a full stop on this key (zero velocity) */
+  stop?: boolean;
+};
+
+/**
+ * Cubic Hermite interpolation *in time* with Catmull-Rom tangents computed on
+ * the real key spacing: position, look-at target, lens and focus all move with
+ * continuous velocity — no speed jumps between segments, natural acceleration
+ * from rest and deceleration into rest (first/last key, or `stop` keys).
+ */
+export const camSmooth = (frame: number, keys: SmoothKey[], handheld = 0): CamState => {
+  const n = keys.length;
+  const f = Math.min(Math.max(frame, keys[0].f), keys[n - 1].f);
+  let i = 0;
+  while (i < n - 2 && f > keys[i + 1].f) i++;
+  const k0 = keys[i];
+  const k1 = keys[Math.min(i + 1, n - 1)];
+  const dt = Math.max(1, k1.f - k0.f);
+  const u = clamp((f - k0.f) / dt);
+  const h00 = 2 * u ** 3 - 3 * u ** 2 + 1;
+  const h10 = u ** 3 - 2 * u ** 2 + u;
+  const h01 = -2 * u ** 3 + 3 * u ** 2;
+  const h11 = u ** 3 - u ** 2;
+  const tangent = (j: number, get: (k: SmoothKey) => number) => {
+    const k = keys[j];
+    if (j === 0 || j === n - 1 || k.stop) return 0;
+    return (get(keys[j + 1]) - get(keys[j - 1])) / (keys[j + 1].f - keys[j - 1].f);
+  };
+  const ch = (get: (k: SmoothKey) => number) =>
+    h00 * get(k0) + h10 * dt * tangent(i, get) + h01 * get(k1) + h11 * dt * tangent(Math.min(i + 1, n - 1), get);
+  const pos: V3 = [ch((k) => k.pos[0]), ch((k) => k.pos[1]), ch((k) => k.pos[2])];
+  const target: V3 = [ch((k) => k.target[0]), ch((k) => k.target[1]), ch((k) => k.target[2])];
+  if (handheld > 0) {
+    pos[0] += (noise1(frame / 90, 1) - 0.5) * handheld;
+    pos[1] += (noise1(frame / 110, 2) - 0.5) * handheld;
+  }
+  const {yaw, pitch} = lookAt(pos, target);
+  return {
+    x: pos[0],
+    y: pos[1],
+    z: pos[2],
+    yaw,
+    pitch,
+    roll: ch((k) => k.roll ?? 0),
+    lens: ch((k) => k.lens ?? 35),
+    focus: ch((k) => k.focus ?? dist(k.pos, k.target)),
+    aperture: Math.max(0, ch((k) => k.aperture ?? 1)),
+  };
+};
