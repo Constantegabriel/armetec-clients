@@ -102,7 +102,7 @@ public/          brand/ (logo oficial), fonts/ (Inter, Geist, Space Grotesk — 
 
 `src/config/timeline.json` concentra **cenas, beats visuais, falas da narração e cues de efeitos sonoros**,
 em segundos. Ele é lido pelo Remotion e pelo gerador de trilha. Ao receber a locução profissional,
-ajuste os `start`/`end` de cada fala e os `beats`: tipografia, câmeras, legendas e efeitos acompanham. Para que a
+ajuste os `start`/`end` de cada fala e os `beats`: tipografia, câmeras e efeitos acompanham. Para que a
 trilha também se alinhe, rode `npm run audio` depois.
 
 ## Áudio
