@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {camPath, shake} from '../animations/camera';
 import {combine, dissolveOut, focusIn, riseIn} from '../animations/kinetic';
-import {COLORS, FONTS} from '../config/theme';
+import {COLORS, FONT_3D_REFINED, FONTS} from '../config/theme';
 import {TaskItem} from '../interfaces/WorkItems';
 import {Clock3D} from '../three/Clock3D';
 import {useExtruded, useOutlines} from '../three/ExtrudedText';
@@ -200,7 +200,7 @@ const MaisProdutividade: React.FC<{f: number}> = ({f}) => {
 
 /* ------------------------- MAIS TEMPO PARA CRESCER ------------------------- */
 const CrescerWord: React.FC<{outline: TextOutline; f: number}> = ({outline, f}) => {
-  const geo = useExtruded(outline, {depth: 90, bevel: 5});
+  const geo = useExtruded(outline, {depth: 40, bevel: 2.5});
   if (!geo) return null;
   const a = EASE.out(prog(f, CRESCER, CRESCER + 40, EASE.linear));
   // growth: the word rises and scales with a slow, confident push
@@ -211,7 +211,7 @@ const CrescerWord: React.FC<{outline: TextOutline; f: number}> = ({outline, f}) 
 const TempoCrescer: React.FC<{f: number}> = ({f}) => {
   const L = useLayout();
   const s = L.u;
-  const outlines = useOutlines(['CRESCER'], L.vertical ? 235 : 260, -0.01);
+  const outlines = useOutlines(['CRESCER'], L.vertical ? 210 : 240, 0.04, FONT_3D_REFINED);
   if (!outlines || f < TEMPO - 16) return null;
   const k = f - TEMPO;
   const cam = camPath(f, [

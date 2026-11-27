@@ -29,4 +29,5 @@ export const FONT_FILES = [
 
 /** Heavy display face used for the extruded 3D typography (OFL, Inter Display). */
 export const FONT_3D = 'fonts/InterDisplay-Black.otf';
-export const FONT_3D_THIN = 'fonts/InterDisplay-Light.otf';
+/** Refined display face for the monumental words (PROBLEMAS, CRESCIMENTO, CRESCER). */
+export const FONT_3D_REFINED = 'fonts/InterDisplay-SemiBold.otf';

@@ -108,7 +108,7 @@ export const S06Digital: React.FC<{from: number}> = ({from}) => {
   const reflow = prog(f, PHONE + 6, PHONE + 70, EASE.linear);
   const phoneW = 440;
   const phoneH = 900;
-  const phonePos = v ? {x: 560, y: 330, z: 820} : {x: 980, y: 230, z: 620};
+  const phonePos = v ? {x: 330, y: 360, z: 900} : {x: 980, y: 230, z: 620};
   const siteT = f - S6 - 20;
   const scroll = prog(f, OPP, END, EASE.inOut) * 260;
 
@@ -142,7 +142,10 @@ export const S06Digital: React.FC<{from: number}> = ({from}) => {
             </div>
           </div>
         </Laptop>
+      </CssWorld>
 
+      {/* devices + opportunities live on their own layer: always in front of the laptop, never intersecting it */}
+      <CssWorld cam={cam}>
         {/* the layout lifts off the screen and reflows into the phone */}
         {phoneIn > 0 ? (
           <Plane x={lerp(0, phonePos.x, phoneIn)} y={lerp(80, phonePos.y, phoneIn)} z={lerp(-200, phonePos.z, phoneIn)} ry={lerp(0, -14, phoneIn)} w={phoneW} h={phoneH} opacity={clamp(phoneIn * 2)}>
@@ -159,7 +162,7 @@ export const S06Digital: React.FC<{from: number}> = ({from}) => {
         {opps.map((o, i) => {
           const a = EASE.out(prog(f, OPP + i * 16, OPP + i * 16 + 30, EASE.linear));
           if (a <= 0) return null;
-          const base = v ? {x: -140, y: 520 + i * 150, z: 1100} : {x: -520, y: -280 + i * 140, z: 1000};
+          const base = v ? {x: -260, y: 560 + i * 140, z: 1150} : {x: -520, y: -280 + i * 140, z: 1000};
           return (
             <Plane key={i} x={base.x} y={base.y + (1 - a) * 80} z={base.z} ry={v ? 6 : 10} w={620} h={118} opacity={a} sharp>
               <Opportunity {...o} />

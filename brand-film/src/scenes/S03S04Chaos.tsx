@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import {camPath, type CamKey} from '../animations/camera';
 import {combine, dissolveOut, focusIn, riseIn, slamIn} from '../animations/kinetic';
 import {CssWorld, Plane, type CamState} from '../components/CssWorld';
-import {COLORS, FONTS} from '../config/theme';
+import {COLORS, FONT_3D_REFINED, FONTS} from '../config/theme';
 import {useExtruded, useOutlines} from '../three/ExtrudedText';
 import type {TextOutline} from '../three/fontShapes';
 import {MAT} from '../three/materials';
@@ -318,7 +318,7 @@ const TypeB: React.FC<{f: number}> = ({f}) => {
   const t = B + 18;
   const out = C - 12;
   if (f < t - 10 || f > out + 30) return null;
-  const local = f - t;
+  const local = Math.max(0, f - t);
   const qi = Math.min(QUERIES.length - 1, Math.floor(local / 52));
   const q = QUERIES[qi];
   const ql = local - qi * 52;
@@ -340,43 +340,65 @@ const TypeB: React.FC<{f: number}> = ({f}) => {
   );
 };
 
+/**
+ * REPETINDO — the same word on an endless conveyor: a column of identical lines
+ * scrolls up at constant speed; only the line crossing the centre is in focus.
+ * Monotony as motion, no pulsing.
+ */
 const TypeC: React.FC<{f: number}> = ({f}) => {
   const L = useLayout();
   const s = L.u;
-  const t = C + 10;
+  const t = C + 6;
   const out = D - 10;
   if (f < t - 5 || f > out + 30) return null;
-  const period = 30;
-  const reps = 7;
-  const fade = 1 - prog(f, out, out + 20, EASE.in);
+  const size = (L.vertical ? 136 : 132) * s;
+  const lineH = size * 1.08;
+  const appear = EASE.out(prog(f, t, t + 30, EASE.linear));
+  const fade = 1 - prog(f, out, out + 22, EASE.inOut);
+  const speed = lineH / 30; // one line every repetition (0.5 s)
+  const offset = ((f - t) * speed) % lineH;
+  const rows = 9;
   return (
-    <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', perspective: 900}}>
-      <div style={{transform: `translateY(${L.safeCenterY - 30 * s}px)`, transformStyle: 'preserve-3d', position: 'relative'}}>
-        {Array.from({length: reps}, (_, i) => {
-          // echo copies are added one per repetition, receding into depth
-          const born = t + i * (period * 0.5);
-          const a = clamp((f - born) / 10);
-          if (a <= 0) return null;
-          const pulse = Math.exp(-(((f - C) % period) / 6)) * 0.08;
+    <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', opacity: fade}}>
+      <div
+        style={{
+          position: 'absolute',
+          height: lineH * rows,
+          width: '100%',
+          transform: `translateY(${L.safeCenterY - 40 * s}px)`,
+          overflow: 'hidden',
+          maskImage: 'linear-gradient(180deg, transparent 0%, #000 38%, #000 62%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 38%, #000 62%, transparent 100%)',
+        }}
+      >
+        {Array.from({length: rows + 1}, (_, r) => {
+          const y = r * lineH - offset;
+          const d = Math.abs(y + lineH / 2 - (lineH * rows) / 2) / lineH; // distance from centre, in lines
+          const focus = clamp(1 - d);
           return (
             <div
-              key={i}
+              key={r}
               style={{
-                position: i === 0 ? 'relative' : 'absolute',
+                position: 'absolute',
                 left: 0,
-                top: 0,
-                transform: `translate3d(0, ${-i * 18 * s}px, ${-i * 190}px) scale(${1 + (i === 0 ? pulse : 0)})`,
-                opacity: (i === 0 ? 1 : 0.55 / i) * a * fade,
-                filter: i > 0 ? `blur(${i * 0.8}px)` : undefined,
+                right: 0,
+                top: y,
+                height: lineH,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                opacity: appear * (0.22 + 0.78 * focus),
+                filter: focus < 0.95 ? `blur(${(1 - focus) * 5}px)` : undefined,
+                transform: `scale(${0.94 + 0.06 * focus})`,
               }}
             >
-              <SplitText text="REPETINDO" size={(L.vertical ? 150 : 150) * s} weight={700} tracking={-0.02} state={() => ({})} color={i === 0 ? COLORS.white : COLORS.gray} />
+              <SplitText text="REPETINDO" size={size} weight={700} tracking={-0.015} color={focus > 0.5 ? COLORS.white : COLORS.gray} state={() => ({})} />
             </div>
           );
         })}
       </div>
-      <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY + (L.vertical ? 130 : 110) * s}px)`, opacity: fade}}>
-        <SplitText text="TAREFAS" size={(L.vertical ? 78 : 72) * s} weight={300} tracking={0.3} state={focusIn(f, t + 24, {spread: 0.4})} />
+      <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY + (L.vertical ? 330 : 300) * s}px)`}}>
+        <SplitText text="TAREFAS" size={(L.vertical ? 64 : 60) * s} weight={300} tracking={0.4} state={focusIn(f, t + 24)} />
       </div>
     </AbsoluteFill>
   );
@@ -422,7 +444,7 @@ const MonumentalWord: React.FC<{outline: TextOutline; f: number; appearAt: numbe
   mats,
   fromBelow,
 }) => {
-  const geo = useExtruded(outline, {depth: 160, bevel: 5});
+  const geo = useExtruded(outline, {depth: 46, bevel: 2.5});
   const a = EASE.out(clamp((f - appearAt) / 50));
   if (!geo || f < appearAt || f >= hideAt) return null;
   return (
@@ -472,8 +494,8 @@ export const S03S04Chaos: React.FC<{from: number}> = ({from}) => {
   const L = useLayout();
   const cam = useCam(f, L.vertical);
   const items = useItems(L.vertical);
-  const size = L.vertical ? 165 : 230;
-  const outlines = useOutlines(['PROBLEMAS', 'CRESCIMENTO'], size, -0.01);
+  const size = L.vertical ? 150 : 210;
+  const outlines = useOutlines(['PROBLEMAS', 'CRESCIMENTO'], size, 0.03, FONT_3D_REFINED);
   if (!outlines) return null;
   const [problemas, crescimento] = outlines;
   const crescScale = Math.min(1, problemas.width / crescimento.width) * (L.vertical ? 1 : 1);
@@ -506,10 +528,10 @@ export const S03S04Chaos: React.FC<{from: number}> = ({from}) => {
           <pointLight position={[0, -3, PROB_Z / 100 + 6]} intensity={dawn * 60} color={COLORS.accent} distance={0} decay={1.2} />
           <MonumentalWord outline={problemas} f={f} appearAt={PROB} hideAt={DISSOLVE} z={PROB_Z} mats={[MAT.graphiteFace(), MAT.blackMetal()]} fromBelow />
           <group position={[0, 0, PROB_Z / 100]}>
-            <ParticleMorph from={problemas} to={crescimento} t={morphT} visible={f >= DISSOLVE && f < GROW + 6} toScale={crescScale} depth={160} />
+            <ParticleMorph from={problemas} to={crescimento} t={morphT} visible={f >= DISSOLVE && f < GROW + 6} toScale={crescScale} depth={60} />
           </group>
           <group scale={crescScale} position={[0, 0, 0]}>
-            <MonumentalWord outline={crescimento} f={f} appearAt={GROW} hideAt={END + 20} z={PROB_Z / crescScale} mats={[MAT.satinWhite(), MAT.accent()]} />
+            <MonumentalWord outline={crescimento} f={f} appearAt={GROW} hideAt={END + 20} z={PROB_Z / crescScale} mats={[MAT.satinWhite(), MAT.sideMetal()]} />
           </group>
         </Stage>
       ) : null}

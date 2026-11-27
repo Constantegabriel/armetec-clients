@@ -47,8 +47,9 @@ const useCamera = (f: number, vertical: boolean) => {
   const focusT = back - TEMPO_Z;
   const keys: CamKey[] = [
     // macro: grazing over the dial at the 2–3 o'clock indices (100mm)
-    {f: 0, pos: [620, -60, 190], target: [230, -260, 0], lens: 85, aperture: 2.4},
-    {f: beat('s01_wDoSeu'), pos: [520, -150, 260], target: [120, -250, 0], lens: 70, aperture: 2, ease: EASE.inOut},
+    // low, grazing macro from the lower right: bezel and rehaut in the foreground, star bridge beyond
+    {f: 0, pos: vertical ? [560, 470, 300] : [640, 420, 280], target: [-40, -60, 0], lens: 50, aperture: 2.6, focus: 640},
+    {f: beat('s01_wDoSeu'), pos: vertical ? [470, 520, 380] : [560, 470, 360], target: [-90, -40, 0], lens: 45, aperture: 2.2, focus: 700, ease: EASE.inOut},
     // pull-back reveal for TEMPO
     {f: beat('s01_wTempo') + 8, pos: [-420, 120, back + 500], target: [0, 0, 0], lens: 50, focus: focusT + 500, aperture: 0.5, ease: EASE.dolly},
     {f: beat('s01_flyThrough'), pos: [-160, 40, back], target: [0, 0, 0], lens: 50, focus: focusT, aperture: 0.5, ease: EASE.inOut},
@@ -106,14 +107,14 @@ export const S01S02Time: React.FC<{from: number}> = ({from}) => {
         cam={cam}
         background={COLORS.black}
         fog={{color: COLORS.black, near: 2500, far: 9000}}
-        envIntensity={0.18 + fillLevel}
+        envIntensity={0.06 + fillLevel * 0.45}
         exposure={1.05}
         dof={{aperture: 0.0035 * (cam.aperture ?? 1), maxBlur: 0.014}}
       >
         <ambientLight intensity={0.04} />
         {/* raking key — the line of light that discovers the dial */}
         <spotLight
-          position={[keyX, 2.2, 0.9]}
+          position={[keyX, 3.2, 2.6]}
           angle={0.42}
           penumbra={0.9}
           intensity={reveal * 90}
@@ -229,7 +230,7 @@ const MacroWords: React.FC<{f: number}> = ({f}) => {
     {t: beat('s01_wUmaHora'), text: 'UMA HORA', size: 118, weight: 700, x: 10},
     {t: beat('s01_wDoSeu'), text: 'DO SEU', size: 64, weight: 300, x: 40},
   ];
-  const exitAt = beat('s01_wTempo') - 6;
+  const exitAt = beat('s01_wTempo') - 32;
   if (f < words[0].t - 2 || f > exitAt + 40) return null;
   const drift = (f - words[0].t) * 0.35;
   return (

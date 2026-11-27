@@ -5,6 +5,8 @@ import {EFFECTS} from '../config/effects';
 export type CharState = {
   x?: number;
   y?: number;
+  /** vertical offset in em (used by masked reveals) */
+  yEm?: number;
   z?: number;
   rx?: number;
   ry?: number;
@@ -55,6 +57,9 @@ export const SplitText: React.FC<Props> = ({
 }) => {
   const chars = Array.from(text);
   const n = chars.length;
+  const states = chars.map((ch, i) => state(i, n, ch));
+  // masked reveal: glyphs travel behind an invisible baseline/cap-line
+  const masked = states.some((st) => st.yEm !== undefined);
   return (
     <div
       style={{
@@ -67,11 +72,12 @@ export const SplitText: React.FC<Props> = ({
         lineHeight,
         letterSpacing: `${tracking}em`,
         color,
+        clipPath: masked ? 'inset(-0.3em -100vw -0.22em -100vw)' : undefined,
         ...style,
       }}
     >
       {chars.map((ch, i) => {
-        const s = state(i, n, ch);
+        const s = states[i];
         let mb = 0;
         if (prevState && EFFECTS.typeMotionBlur > 0) {
           const p = prevState(i, n, ch);
@@ -85,7 +91,7 @@ export const SplitText: React.FC<Props> = ({
             key={i}
             style={{
               display: 'inline-block',
-              transform: `translate3d(${s.x ?? 0}px, ${s.y ?? 0}px, ${s.z ?? 0}px) rotateX(${s.rx ?? 0}deg) rotateY(${s.ry ?? 0}deg) rotateZ(${s.rz ?? 0}deg) scale(${s.sx ?? 1}, ${s.sy ?? 1})`,
+              transform: `translate3d(${s.x ?? 0}px, calc(${s.y ?? 0}px + ${s.yEm ?? 0}em), ${s.z ?? 0}px) rotateX(${s.rx ?? 0}deg) rotateY(${s.ry ?? 0}deg) rotateZ(${s.rz ?? 0}deg) scale(${s.sx ?? 1}, ${s.sy ?? 1})`,
               opacity: o,
               filter: blur > 0.3 ? `blur(${Math.min(blur, 40).toFixed(2)}px)` : undefined,
               fontVariationSettings: `'wght' ${s.weight ?? weight}`,

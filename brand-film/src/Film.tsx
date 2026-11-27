@@ -2,6 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Sequence} from 'remotion';
 import {Soundtrack} from './audio/Soundtrack';
 import {FontLoader} from './components/FontLoader';
+import {AmbientDust} from './components/Ambient';
 import {FilmGrain, Vignette} from './components/PostFX';
 import {COLORS} from './config/theme';
 import {EFFECTS} from './config/effects';
@@ -40,6 +41,7 @@ export const Film: React.FC<{subtitles?: boolean}> = ({subtitles = EFFECTS.subti
           </Enter>
         </Sequence>
       ))}
+      <AmbientDust />
       <Vignette />
       <FilmGrain />
       {subtitles ? <Subtitles /> : null}

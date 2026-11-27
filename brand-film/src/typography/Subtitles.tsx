@@ -27,7 +27,9 @@ export const Subtitles: React.FC = () => {
       <div
         style={{
           marginBottom: bottom,
-          maxWidth: L.vertical ? 860 : 1300,
+          maxWidth: L.vertical ? 780 : 1300,
+          // keep clear of the Reels action column on the right
+          transform: L.vertical ? `translateX(${-(L.safe.right - L.safe.left) / 2}px)` : undefined,
           textAlign: 'center',
           fontFamily: FONTS.sans,
           fontSize: (L.vertical ? 33 : 30) * L.u,

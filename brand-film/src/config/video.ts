@@ -10,10 +10,12 @@ export const FORMATS = {
 } as const;
 
 /**
- * Instagram Reels / Stories safe zones (px, 1080x1920). Key copy never sits
- * outside these bounds; the horizontal cut uses a classic 5% title-safe.
+ * Instagram Reels safe zones (px, 1080x1920): top bar, bottom caption band and
+ * the right-hand action column (lower half). Key copy and UI never sit in these
+ * margins, but the frame is always full-bleed: atmosphere and scenery extend
+ * into them (see components/Ambient.tsx). The horizontal cut uses 5% title-safe.
  */
 export const SAFE_AREA = {
-  vertical: {top: 250, bottom: 420, left: 72, right: 150},
+  vertical: {top: 250, bottom: 420, left: 72, right: 180},
   horizontal: {top: 60, bottom: 70, left: 100, right: 100},
 } as const;
