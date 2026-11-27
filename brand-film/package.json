@@ -1,0 +1,36 @@
+{
+  "name": "armetec-brand-film",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ArmeTec — Tecnologia que devolve o seu tempo. Cinematic brand film (Remotion).",
+  "scripts": {
+    "dev": "remotion studio",
+    "typecheck": "tsc --noEmit",
+    "audio": "python3 scripts/generate-audio.py",
+    "brand": "node scripts/trace-logo.mjs",
+    "stills": "node scripts/render-stills.mjs",
+    "still": "remotion still",
+    "render:vertical": "remotion render ArmeTecFilmVertical out/armetec-film-9x16.mp4",
+    "render:horizontal": "remotion render ArmeTecFilmHorizontal out/armetec-film-16x9.mp4"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@react-three/fiber": "^9.3.0",
+    "@remotion/cli": "^4.0.547",
+    "@remotion/media-utils": "^4.0.547",
+    "@remotion/three": "^4.0.547",
+    "opentype.js": "^1.3.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.547",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/opentype.js": "^1.3.8",
+    "@types/react": "^19.1.8",
+    "@types/three": "^0.180.0",
+    "potrace": "^2.1.8",
+    "typescript": "^5.8.3"
+  }
+}
