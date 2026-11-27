@@ -57,16 +57,31 @@ export const S03aSheets: React.FC<{from: number}> = ({from}) => {
       {f: A + 70, pos: [-220, -40, 680], target: [-190, -30, 0], lens: 50, aperture: 1.6},
       {f: COPY, pos: [-120, -170, 1250], target: [-80, -130, 0], lens: 45, aperture: 1.2},
       {f: MORE + 10, pos: [60, -40, v ? 2100 : 1700], target: [0, 0, -300], lens: 40, aperture: 1},
-      {f: END, pos: [220, 40, v ? 3300 : 2600], target: [80, 0, -500], lens: 38, roll: 2, aperture: 0.9},
+      {f: END, pos: [180, 60, v ? 4300 : 3300], target: [60, 0, -900], lens: 38, roll: 2, aperture: 0.8},
     ],
     2,
   );
   const w2 = EASE.out(prog(f, MORE, MORE + 34, EASE.linear));
   const w3 = EASE.out(prog(f, MORE + 36, MORE + 70, EASE.linear));
+  // the pile keeps growing: more workbooks open, all being filled by hand
+  const extra = [
+    {x: v ? -620 : -1500, y: v ? -1250 : -620, z: -1750, ry: 8, file: 'Estoque_março_conferido.xlsx', seed: 12, tab: 2, at: MORE + 62},
+    {x: v ? 640 : 1550, y: v ? 1300 : 640, z: -1950, ry: -10, file: 'Comissoes_vendedores_v2.xlsx', seed: 17, tab: 0, at: MORE + 84},
+    {x: v ? 560 : 1450, y: v ? -1180 : -700, z: -2500, ry: -6, file: 'Contas_a_pagar_OUT.xlsx', seed: 21, tab: 3, at: MORE + 102},
+    {x: v ? -600 : -1550, y: v ? 1250 : 700, z: -2700, ry: 9, file: 'Pedidos_semana(3).xlsx', seed: 25, tab: 0, at: MORE + 118},
+  ];
   return (
     <AbsoluteFill style={{background: COLORS.black}}>
       <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 60% at 50% 55%, rgba(51,163,107,0.06), transparent 70%)'}} />
       <CssWorld cam={cam}>
+        {extra.map((x, i) => {
+          const a = EASE.out(prog(f, x.at, x.at + 30, EASE.linear));
+          return a > 0 ? (
+            <Plane key={i} x={x.x} y={x.y} z={x.z - (1 - a) * 600} ry={x.ry} w={WIN.w} h={WIN.h} opacity={a}>
+              <ExcelWindow w={WIN.w} h={WIN.h} file={x.file} seed={x.seed} state={{...typingProgress(f - x.at, SALES_COLS, x.seed, 7, 1.0), frame: f}} activeTab={x.tab} />
+            </Plane>
+          ) : null;
+        })}
         {w3 > 0 ? (
           <Plane x={-560} y={420} z={-1250 - (1 - w3) * 600} ry={10} w={WIN.w} h={WIN.h} opacity={w3}>
             <ExcelWindow w={WIN.w} h={WIN.h} file="Financeiro_conferencia_v4.xlsx" seed={9} state={{...typingProgress(f - MORE - 40, SALES_COLS, 9, 9, 1.1), frame: f}} activeTab={3} />

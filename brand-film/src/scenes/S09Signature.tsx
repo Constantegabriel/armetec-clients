@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useLayoutEffect, useMemo, useRef} from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {riseIn} from '../animations/kinetic';
 import {LightStreak} from '../components/Light';
@@ -8,8 +8,9 @@ import {COLORS, FONTS} from '../config/theme';
 import {SplitText} from '../typography/SplitText';
 import {EASE} from '../utils/easing';
 import {useLayout} from '../utils/layout';
+import {hash01} from '../utils/random';
 import {clamp} from '../utils/math';
-import {beat, prog, sec} from '../utils/time';
+import {beat, prog, sceneEnd} from '../utils/time';
 
 /**
  * SCENE 09 — the logo is *constructed*.
@@ -26,7 +27,7 @@ const LINE = beat('s09_lightLine');
 const LOGO = beat('s09_logo');
 const SLOGAN = beat('s09_slogan');
 const BLACK = beat('s09_black');
-const END = sec(99);
+const END = sceneEnd('s09-assinatura');
 
 const PIECES = SYMBOL_PATH.d.split(/(?=M )/).map((d) => d.trim());
 const SW = SYMBOL_PATH.width;
@@ -76,51 +77,118 @@ const Guides: React.FC<{k: number; fade: number; size: number; cy: number}> = ({
   );
 };
 
+/**
+ * The symbol is *built*: ~1600 points of light swirl in from the whole frame
+ * and settle exactly onto the official mark (sampled from its traced shape),
+ * while its three orbits are traced in light; the solid mark then materialises
+ * with a sheen and a lock pulse.
+ */
+const N_PARTICLES = 1600;
+
+const useSymbolSamples = () =>
+  useMemo(() => {
+    const S = 520;
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const g = c.getContext('2d')!;
+    const k = S / Math.max(SW, SH);
+    g.setTransform(k, 0, 0, k, (S - SW * k) / 2, (S - SH * k) / 2);
+    g.fillStyle = '#fff';
+    g.fill(new Path2D(SYMBOL_PATH.d), 'evenodd');
+    const data = g.getImageData(0, 0, S, S).data;
+    const pts: Array<[number, number]> = [];
+    for (let y = 0; y < S; y += 3) for (let x = 0; x < S; x += 3) if (data[(y * S + x) * 4 + 3] > 128) pts.push([x / S, y / S]);
+    return Array.from({length: N_PARTICLES}, (_, i) => pts[Math.floor(hash01(i, 5) * pts.length)] ?? [0.5, 0.5]);
+  }, []);
+
+const ParticleBuild: React.FC<{f: number; size: number}> = ({f, size}) => {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const samples = useSymbolSamples();
+  const L = useLayout();
+  const W = Math.round(L.width);
+  const H = Math.round(L.height);
+  useLayoutEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const g = c.getContext('2d')!;
+    g.clearRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter';
+    const cx = W / 2;
+    const cy = H / 2;
+    const pos = (i: number, ff: number) => {
+      const r = (k: number) => hash01(i, k);
+      const start = LINE - 12 + r(1) * 26;
+      const dur = 50 + r(2) * 26;
+      const u = clamp((ff - start) / dur);
+      const e = EASE.inOut(u);
+      const tx = cx + (samples[i][0] - 0.5) * size;
+      const ty = cy + (samples[i][1] - 0.5) * size;
+      // spiral approach from far away
+      const ang0 = r(3) * Math.PI * 2;
+      const rad0 = Math.max(W, H) * (0.45 + r(4) * 0.5);
+      const ang = ang0 + (1 - e) * (2.2 + r(5) * 1.5);
+      const rad = rad0 * (1 - e);
+      return {x: tx + Math.cos(ang) * rad, y: ty + Math.sin(ang) * rad * 0.8, u};
+    };
+    const fadeAll = 1 - prog(f, LINE + 74, LINE + 96, EASE.inOut);
+    if (fadeAll <= 0) return;
+    for (let i = 0; i < N_PARTICLES; i++) {
+      const p1 = pos(i, f);
+      if (p1.u <= 0) continue;
+      const p0 = pos(i, f - 2.2);
+      const arrived = p1.u >= 1;
+      const a = (arrived ? 0.55 : 0.25 + 0.5 * p1.u) * fadeAll;
+      g.strokeStyle = hash01(i, 9) < 0.22 ? `rgba(129,150,255,${a})` : `rgba(235,240,255,${a})`;
+      g.lineWidth = arrived ? 2.2 : 1.6;
+      g.beginPath();
+      g.moveTo(p0.x, p0.y);
+      g.lineTo(p1.x + (arrived ? 0.6 : 0), p1.y);
+      g.stroke();
+    }
+  });
+  return <canvas ref={ref} width={W} height={H} style={{position: 'absolute', left: 0, top: 0, width: W, height: H, pointerEvents: 'none'}} />;
+};
+
 const Symbol: React.FC<{f: number; size: number}> = ({f, size}) => {
   const scale = size / Math.max(SW, SH);
+  const fill = EASE.out(prog(f, LINE + 60, LINE + 86, EASE.linear));
+  const flash = f >= LINE + 84 ? Math.exp(-(f - LINE - 84) / 9) : 0;
+  const sheen = prog(f, LINE + 78, LINE + 130, EASE.inOut);
   return (
     <svg viewBox={`0 0 ${SW} ${SH}`} width={SW * scale} height={SH * scale} style={{overflow: 'visible'}}>
       <defs>
         <filter id="sym-glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation={18} result="b" />
+          <feGaussianBlur stdDeviation={16} result="b" />
           <feMerge>
             <feMergeNode in="b" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        <linearGradient id="sym-sheen" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="sym-fill" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.5" stopColor="#d9dbe3" />
+          <stop offset="0.55" stopColor="#dfe3ee" />
           <stop offset="1" stopColor="#ffffff" />
         </linearGradient>
+        <linearGradient id="sym-sheen" x1="0" y1="0" x2="1" y2="0.6">
+          <stop offset={Math.max(0, sheen - 0.15)} stopColor="#fff" stopOpacity={0} />
+          <stop offset={sheen} stopColor="#fff" stopOpacity={0.95} />
+          <stop offset={Math.min(1, sheen + 0.15)} stopColor="#fff" stopOpacity={0} />
+        </linearGradient>
+        <mask id="sym-mask">
+          <path d={SYMBOL_PATH.d} fill="#fff" fillRule="evenodd" />
+        </mask>
       </defs>
+      {/* orbits traced in light, one after another */}
       {PIECES.map((d, i) => {
-        const t0 = LINE + 14 + i * 12;
-        const draw = EASE.inOut(prog(f, t0, t0 + 40, EASE.linear));
-        const lock = EASE.dolly(prog(f, t0 + 20, t0 + 62, EASE.linear));
-        const fill = EASE.out(prog(f, t0 + 44, t0 + 66, EASE.linear));
-        // each orbit arrives from its own angle and settles exactly in place
-        const rot = (1 - lock) * (i === 0 ? -38 : i === 1 ? 34 : -26);
-        const sc = 0.86 + 0.14 * lock;
-        const flash = Math.exp(-Math.max(0, f - (t0 + 62)) / 7) * (f >= t0 + 62 ? 1 : 0);
+        const t0 = LINE + 4 + i * 12;
+        const draw = EASE.inOut(prog(f, t0, t0 + 46, EASE.linear));
         return (
-          <g key={i} transform={`rotate(${rot} ${SW / 2} ${SH / 2}) translate(${(SW / 2) * (1 - sc)} ${(SH / 2) * (1 - sc)}) scale(${sc})`}>
-            <path
-              d={d}
-              fill="none"
-              stroke={i === 1 ? COLORS.accentSoft : '#ffffff'}
-              strokeWidth={5}
-              pathLength={1}
-              strokeDasharray="1 1"
-              strokeDashoffset={1 - draw}
-              strokeOpacity={1 - fill * 0.9}
-              filter="url(#sym-glow)"
-            />
-            <path d={d} fill="url(#sym-sheen)" fillRule="evenodd" opacity={fill} />
-            {flash > 0.01 ? <path d={d} fill="#ffffff" opacity={flash * 0.8} filter="url(#sym-glow)" /> : null}
-          </g>
+          <path key={i} d={d} fill="none" stroke={i === 1 ? COLORS.accentSoft : '#ffffff'} strokeWidth={4} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - draw} strokeOpacity={0.75 * (1 - fill * 0.85)} filter="url(#sym-glow)" />
         );
       })}
+      <path d={SYMBOL_PATH.d} fill="url(#sym-fill)" fillRule="evenodd" opacity={fill} />
+      {sheen > 0 && sheen < 1 ? <rect x={0} y={0} width={SW} height={SH} fill="url(#sym-sheen)" mask="url(#sym-mask)" opacity={0.8} /> : null}
+      {flash > 0.01 ? <path d={SYMBOL_PATH.d} fill="#ffffff" fillRule="evenodd" opacity={flash * 0.7} filter="url(#sym-glow)" /> : null}
     </svg>
   );
 };
@@ -181,6 +249,9 @@ export const S09Signature: React.FC<{from: number}> = ({from}) => {
         <Guides k={guides} fade={guidesFade} size={symSize} cy={symY} />
         <LightStreak progress={EASE.out(prog(f, LINE - 8, LINE + 30, EASE.linear))} fade={1 - prog(f, LINE + 40, LINE + 90)} y={symY} intensity={1.2} />
         <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', perspective: 1400, transform: `scale(${push})`}}>
+          <AbsoluteFill style={{transform: `translateY(${symY}px)`}}>
+            <ParticleBuild f={f} size={symSize} />
+          </AbsoluteFill>
           <div style={{position: 'absolute', transform: `translateY(${symY}px) rotateX(${tilt}deg)`}}>
             <Symbol f={f} size={symSize} />
           </div>

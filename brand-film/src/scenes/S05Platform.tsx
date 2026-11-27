@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
-import {camSmooth, type CamKey} from '../animations/camera';
+import {camSmooth, type SmoothKey} from '../animations/camera';
 import {CssWorld, Plane} from '../components/CssWorld';
 import {VolumetricBeams} from '../components/Light';
 import {COLORS, FONTS} from '../config/theme';
@@ -37,20 +37,20 @@ export const S5_TARGET_Y = (vertical: boolean) => (vertical ? -150 : -150);
 const useCam = (f: number, vertical: boolean) => {
   const d = S5_FINAL_DISTANCE(vertical);
   const ty = S5_TARGET_Y(vertical);
-  const keys: CamKey[] = [
+  // Frontal, centred presentation of each module: the rig settles (stop) on
+  // every station, pushes in slowly while it plays, then glides to the next.
+  const keys: SmoothKey[] = [
     {f: S5 - 30, pos: [0, 0, 2900], target: [0, 0, -500], lens: 35, aperture: 0.6},
-    {f: S5 + 60, pos: [-520, ty + 160, d + 350], target: [0, ty, 0], lens: 35, aperture: 0.9, ease: EASE.out},
-    {f: SIMP - 40, pos: [380, ty - 140, d + 80], target: [60, ty, 0], lens: 35, aperture: 0.9, ease: EASE.inOut},
-    {f: SIMP + 10, pos: [GAP, ty, d], target: [GAP, ty, 0], lens: 35, aperture: 0.8, ease: EASE.dolly},
-    {f: CENT - 40, pos: [GAP + 160, ty + 60, d - 120], target: [GAP, ty, 0], lens: 35, aperture: 0.8, ease: EASE.inOut},
-    {f: CENT + 10, pos: [GAP * 2, ty, d], target: [GAP * 2, ty, 0], lens: 35, aperture: 0.8, ease: EASE.dolly},
-    {f: AUTO - 40, pos: [GAP * 2 - 180, ty - 60, d - 100], target: [GAP * 2, ty, 0], lens: 35, aperture: 0.8, ease: EASE.inOut},
-    {f: AUTO + 10, pos: [GAP * 3 + 200, ty + 50, d + 150], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8, ease: EASE.dolly},
-    {f: END - 40, pos: [GAP * 3 + 40, ty, d + 20], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8, ease: EASE.inOut},
-    {f: END + 20, pos: [GAP * 3, ty, d], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8, ease: EASE.inOut},
+    {f: S5 + 50, pos: [0, ty, d + 140], target: [0, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: SIMP - 34, pos: [0, ty, d + 30], target: [0, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: SIMP + 6, pos: [GAP, ty, d + 100], target: [GAP, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: CENT - 34, pos: [GAP, ty, d], target: [GAP, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: CENT + 6, pos: [GAP * 2, ty, d + 100], target: [GAP * 2, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: AUTO - 34, pos: [GAP * 2, ty, d], target: [GAP * 2, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: AUTO + 6, pos: [GAP * 3, ty, d + 100], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8, stop: true},
+    {f: END + 20, pos: [GAP * 3, ty, d], target: [GAP * 3, ty, 0], lens: 35, aperture: 0.8},
   ];
-  // velocity-continuous rig: no speed jumps between stations
-  return camSmooth(f, keys.map(({ease: _e, ...k}) => k), 2);
+  return camSmooth(f, keys, 1);
 };
 
 /** Tiles from scene 04 dock into the platform sidebar. */

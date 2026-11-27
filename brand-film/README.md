@@ -4,8 +4,8 @@ Filme publicitário cinematográfico (Remotion + React + TypeScript + Three.js).
 
 | Composição | Formato | Uso |
 | --- | --- | --- |
-| `ArmeTecFilmVertical` | 1080 × 1920 · 9:16 · 60 fps · 99 s | Reels, Stories, anúncios (versão principal) |
-| `ArmeTecFilmHorizontal` | 1920 × 1080 · 16:9 · 60 fps · 99 s | YouTube, institucional |
+| `ArmeTecFilmVertical` | 1080 × 1920 · 9:16 · 60 fps · 92 s | Reels, Stories, anúncios (versão principal) |
+| `ArmeTecFilmHorizontal` | 1920 × 1080 · 16:9 · 60 fps · 92 s | YouTube, institucional |
 
 Fica tudo nesta pasta (`brand-film/`), separado do app de escopo de clientes que está na raiz do repositório.
 
@@ -113,7 +113,7 @@ trilha também se alinhe, rode `npm run audio` depois.
   papel, notificações, mensagem recebida, tiques, engrenagens, impactos, whooshes, congelamento,
   revelações tipográficas, construção da logo…). Ao mudar um cue, rode `npm run audio`.
 - **Narração: ainda não incluída.** Grave a locução seguindo os tempos de `timeline.json` → `narration`
-  (roteiro oficial completo, 99 s), salve em **`public/audio/narration.wav`** e mude
+  (roteiro oficial completo, 92 s), salve em **`public/audio/narration.wav`** e mude
   `AUDIO.narration.enabled` para `true` em `src/config/audio.ts`. O sound design abaixa levemente sob a voz.
 
 ## Tipografia e legendas

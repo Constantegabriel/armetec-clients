@@ -23,3 +23,6 @@ export const keys = (frame: number, kf: Array<[number, number]>, ease: Ease = EA
   }
   return kf[kf.length - 1][1];
 };
+
+/** Absolute frame where a scene (timeline.json → scenes) ends. */
+export const sceneEnd = (id: (typeof timeline.scenes)[number]['id']) => sec(timeline.scenes.find((s) => s.id === id)!.end);

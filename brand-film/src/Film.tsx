@@ -15,6 +15,7 @@ import {S06S07Connected} from './scenes/S06S07Connected';
 import {S08Results} from './scenes/S08Results';
 import {S09Signature} from './scenes/S09Signature';
 import {Enter, type EnterType} from './transitions/Enter';
+import timeline from './config/timeline.json';
 import {sec} from './utils/time';
 
 /**
@@ -24,16 +25,19 @@ import {sec} from './utils/time';
  */
 type Block = {from: number; to: number; C: React.FC<{from: number}>; name: string; enter?: {type: EnterType; frames: number}};
 
+const S = (id: string) => timeline.scenes.find((x) => x.id === id)!;
+const B = timeline.beats;
+
 export const BLOCKS: Block[] = [
-  {name: '01-02 Tempo', from: 0, to: sec(12.2), C: S01S02Time},
-  {name: '03a Planilhas', from: sec(11.75), to: sec(16.75), C: S03aSheets, enter: {type: 'dissolve', frames: 26}},
-  {name: '03b Procurando informações', from: sec(16.4), to: sec(22.25), C: S03bSearch, enter: {type: 'push', frames: 22}},
-  {name: '03c Repetindo tarefas', from: sec(21.85), to: sec(27.75), C: S03cRepeat, enter: {type: 'push', frames: 22}},
-  {name: '03d-04 Automáticos → Crescimento', from: sec(27.45), to: sec(39.8), C: S03dS04Turn, enter: {type: 'push', frames: 22}},
-  {name: '05 Plataforma ArmeTec', from: sec(39.4), to: sec(53.9), C: S05Platform, enter: {type: 'dissolve', frames: 24}},
-  {name: '06-07 Relatórios no WhatsApp + Mobilidade', from: sec(53.4), to: sec(84.3), C: S06S07Connected, enter: {type: 'dissolve', frames: 24}},
-  {name: '08 Resultados', from: sec(84.0), to: sec(93.6), C: S08Results, enter: {type: 'light', frames: 18}},
-  {name: '09 Assinatura', from: sec(93.0), to: sec(99), C: S09Signature, enter: {type: 'dissolve', frames: 36}},
+  {name: '01-02 Tempo', from: 0, to: sec(B.s03a + 0.25), C: S01S02Time},
+  {name: '03a Planilhas', from: sec(B.s03a - 0.25), to: sec(B.s03b + 0.25), C: S03aSheets, enter: {type: 'wipe', frames: 40}},
+  {name: '03b Procurando informações', from: sec(B.s03b - 0.1), to: sec(B.s03c + 0.25), C: S03bSearch, enter: {type: 'push', frames: 22}},
+  {name: '03c Repetindo tarefas', from: sec(B.s03c - 0.15), to: sec(B.s03d + 0.15), C: S03cRepeat, enter: {type: 'push', frames: 22}},
+  {name: '03d-04 Automáticos → Crescimento', from: sec(B.s03d - 0.15), to: sec(S('s04-mudanca-de-perspectiva').end + 0.3), C: S03dS04Turn, enter: {type: 'push', frames: 22}},
+  {name: '05 Plataforma ArmeTec', from: sec(B.s05_platform - 0.1), to: sec(B.s06 + 0.4), C: S05Platform, enter: {type: 'dissolve', frames: 24}},
+  {name: '06-07 Relatórios no WhatsApp + Mobilidade', from: sec(B.s06 - 0.1), to: sec(S('s07-mobilidade').end + 0.3), C: S06S07Connected, enter: {type: 'dissolve', frames: 24}},
+  {name: '08 Resultados', from: sec(S('s08-resultados').start), to: sec(S('s08-resultados').end + 0.6), C: S08Results, enter: {type: 'light', frames: 18}},
+  {name: '09 Assinatura', from: sec(S('s09-assinatura').start), to: sec(timeline.durationSeconds), C: S09Signature, enter: {type: 'dissolve', frames: 36}},
 ];
 
 export const Film: React.FC = () => (

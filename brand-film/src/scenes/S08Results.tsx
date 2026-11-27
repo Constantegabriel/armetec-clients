@@ -11,7 +11,7 @@ import {EASE} from '../utils/easing';
 import {useLayout} from '../utils/layout';
 import {clamp} from '../utils/math';
 import {hash01} from '../utils/random';
-import {beat, prog, sec} from '../utils/time';
+import {beat, prog, sceneEnd} from '../utils/time';
 
 /**
  * SCENE 08 — the climax. Each benefit has its own visual language:
@@ -23,7 +23,7 @@ const CONTROLE = beat('s08_controle');
 const PROD = beat('s08_produtividade');
 const TEMPO = beat('s08_tempo');
 const CRESCER = beat('s08_crescer');
-const END = sec(93);
+const END = sceneEnd('s08-resultados');
 
 /* --------------------------------- MENOS ---------------------------------- */
 const MenosTarefas: React.FC<{f: number}> = ({f}) => {
@@ -76,69 +76,110 @@ const MenosTarefas: React.FC<{f: number}> = ({f}) => {
 };
 
 /* -------------------------------- CONTROLE -------------------------------- */
+/**
+ * MAIS CONTROLE — a control panel calibrates itself: a precision dial settles
+ * from erratic readings to a locked target, sliders align on one line,
+ * switches turn on in sequence. Everything ends perfectly still and aligned.
+ */
 const MaisControle: React.FC<{f: number}> = ({f}) => {
   const L = useLayout();
   const s = L.u;
   if (f < CONTROLE - 10 || f > PROD + 14) return null;
-  const out = 1 - prog(f, PROD - 6, PROD + 10, EASE.in);
-  const W = L.width;
-  const H = L.height;
-  const n = 36;
-  const snap = EASE.dolly(prog(f, CONTROLE + 4, CONTROLE + 50, EASE.linear));
-  const guides = EASE.out(prog(f, CONTROLE + 30, CONTROLE + 70, EASE.linear));
-  const cols = 6;
-  const gx = (i: number) => W / 2 + ((i % cols) - (cols - 1) / 2) * 120 * s;
-  const gy = (i: number) => H / 2 + L.safeCenterY + 230 * s + (Math.floor(i / cols) - 2.5) * 80 * s;
+  const out = 1 - prog(f, PROD - 8, PROD + 10, EASE.in);
+  const inA = EASE.out(prog(f, CONTROLE - 6, CONTROLE + 18, EASE.linear));
+  const lock = EASE.dolly(prog(f, CONTROLE + 8, CONTROLE + 62, EASE.linear));
+  const t = f - CONTROLE;
+  // erratic needle → precise target (jitter decays as control is gained)
+  const jitter = (1 - lock) * (Math.sin(t * 0.9) * 55 + Math.sin(t * 2.3 + 1) * 30);
+  const target = 0.82;
+  const val = target * EASE.out(prog(f, CONTROLE, CONTROLE + 50, EASE.linear));
+  const R = (L.vertical ? 250 : 210) * s;
+  const cx = L.width / 2;
+  const cy = L.height / 2 + L.safeCenterY + (L.vertical ? 120 : 80) * s;
+  const a0 = -225;
+  const sweep = 270;
+  const needle = a0 + sweep * val + jitter;
+  const polar = (deg: number, r: number) => [cx + Math.cos((deg * Math.PI) / 180) * r, cy + Math.sin((deg * Math.PI) / 180) * r];
+  const arc = (from: number, to: number, r: number) => {
+    const [x1, y1] = polar(from, r);
+    const [x2, y2] = polar(to, r);
+    return `M${x1},${y1} A${r},${r} 0 ${to - from > 180 ? 1 : 0} 1 ${x2},${y2}`;
+  };
+  const [nx, ny] = polar(needle, R * 0.78);
+  const sliders = [0.3, 0.75, 0.5, 0.62];
+  const sw = (L.vertical ? 560 : 460) * s;
+  const sy0 = cy + R + (L.vertical ? 110 : 70) * s;
+  const pct = Math.round(val * 100 * (0.9 + 0.1 * lock));
   return (
-    <AbsoluteFill style={{opacity: out}}>
-      <svg width={W} height={H} style={{position: 'absolute', inset: 0}}>
-        {/* precise grid guides */}
-        {Array.from({length: cols}, (_, c) => (
-          <line key={`v${c}`} x1={gx(c)} x2={gx(c)} y1={gy(0) - 60 * s} y2={gy(0) - 60 * s + (gy(n - 1) - gy(0) + 120 * s) * guides} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-        ))}
-        {Array.from({length: 6}, (_, r) => (
-          <line key={`h${r}`} y1={gy(r * cols)} y2={gy(r * cols)} x1={gx(0) - 60 * s} x2={gx(0) - 60 * s + (gx(cols - 1) - gx(0) + 120 * s) * guides} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-        ))}
-        {/* connections between indicators */}
-        {Array.from({length: n - 1}, (_, i) =>
-          (i + 1) % cols === 0 ? null : (
-            <line key={`c${i}`} x1={gx(i)} y1={gy(i)} x2={gx(i) + (gx(i + 1) - gx(i)) * guides} y2={gy(i + 1)} stroke={COLORS.accent} strokeOpacity={0.55} strokeWidth={2} />
-          ),
-        )}
-        {Array.from({length: n}, (_, i) => {
-          const sx = W / 2 + (hash01(i, 1) - 0.5) * W * 1.1;
-          const sy = H / 2 + (hash01(i, 2) - 0.5) * H * 0.9;
-          const x = sx + (gx(i) - sx) * snap;
-          const y = sy + (gy(i) - sy) * snap;
-          const on = i % 7 === 3;
+    <AbsoluteFill style={{opacity: out * inA}}>
+      <svg width={L.width} height={L.height} style={{position: 'absolute', inset: 0}}>
+        <defs>
+          <filter id="ctl-glow">
+            <feGaussianBlur stdDeviation={6} />
+          </filter>
+        </defs>
+        {/* ticks */}
+        {Array.from({length: 55}, (_, i) => {
+          const d = a0 + (i / 54) * sweep;
+          const major = i % 9 === 0;
+          const [x1, y1] = polar(d, R * (major ? 1.06 : 1.03));
+          const [x2, y2] = polar(d, R * 1.12);
+          const lit = (i / 54) <= val;
+          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={lit ? COLORS.accentSoft : 'rgba(255,255,255,0.22)'} strokeWidth={major ? 3 : 1.5} />;
+        })}
+        <path d={arc(a0, a0 + sweep, R * 0.92)} stroke="rgba(255,255,255,0.08)" strokeWidth={14 * s} fill="none" strokeLinecap="round" />
+        <path d={arc(a0, a0 + sweep * val, R * 0.92)} stroke={COLORS.accent} strokeWidth={14 * s} fill="none" strokeLinecap="round" />
+        <path d={arc(a0, a0 + sweep * val, R * 0.92)} stroke={COLORS.accent} strokeWidth={14 * s} fill="none" strokeLinecap="round" filter="url(#ctl-glow)" opacity={0.7} />
+        {/* target marker */}
+        {(() => {
+          const [tx, ty] = polar(a0 + sweep * target, R * 1.2);
+          return <circle cx={tx} cy={ty} r={7 * s} fill={lock > 0.95 ? COLORS.accent : 'rgba(255,255,255,0.4)'} />;
+        })()}
+        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={COLORS.white} strokeWidth={4 * s} strokeLinecap="round" />
+        <circle cx={cx} cy={cy} r={12 * s} fill={COLORS.white} />
+        <text x={cx} y={cy + R * 0.45} textAnchor="middle" fill={COLORS.white} style={{fontFamily: FONTS.display, fontWeight: 600, fontSize: 64 * s, fontVariantNumeric: 'tabular-nums'}}>
+          {pct}%
+        </text>
+        <text x={cx} y={cy + R * 0.45 + 34 * s} textAnchor="middle" fill={COLORS.gray} style={{fontFamily: FONTS.sans, fontSize: 18 * s, letterSpacing: '0.24em'}}>
+          OPERAÇÃO SOB CONTROLE
+        </text>
+        {/* sliders snap onto one aligned value */}
+        {sliders.map((v0, i) => {
+          const y = sy0 + i * 46 * s;
+          const v1 = lerpN(v0 + Math.sin(t * 0.5 + i) * 0.15 * (1 - lock), target, lock);
+          const x0 = cx - sw / 2;
           return (
             <g key={i}>
-              <circle cx={x} cy={y} r={(on ? 11 : 7) * s} fill={on ? COLORS.accent : COLORS.white} opacity={0.4 + 0.6 * snap} />
-              {snap > 0.98 && on ? <circle cx={x} cy={y} r={22 * s} fill="none" stroke={COLORS.accent} strokeOpacity={0.6} /> : null}
+              <line x1={x0} y1={y} x2={x0 + sw} y2={y} stroke="rgba(255,255,255,0.12)" strokeWidth={6 * s} strokeLinecap="round" />
+              <line x1={x0} y1={y} x2={x0 + sw * clamp(v1)} y2={y} stroke={COLORS.accentSoft} strokeWidth={6 * s} strokeLinecap="round" />
+              <circle cx={x0 + sw * clamp(v1)} cy={y} r={11 * s} fill={COLORS.white} />
             </g>
           );
         })}
+        {/* alignment guide appears when everything locks */}
+        <line x1={cx - sw / 2 + sw * target} y1={sy0 - 26 * s} x2={cx - sw / 2 + sw * target} y2={sy0 + 3 * 46 * s + 26 * s} stroke={COLORS.accent} strokeWidth={2} strokeDasharray="6 6" opacity={clamp((lock - 0.8) * 5)} />
       </svg>
       <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
-        <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY - (L.vertical ? 260 : 200) * s}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-          <SplitText text="MAIS" size={(L.vertical ? 64 : 60) * s} weight={300} tracking={0.4} state={focusIn(f, CONTROLE, {spread: 0.4})} />
+        <div style={{position: 'absolute', transform: `translateY(${cy - L.height / 2 - R - (L.vertical ? 190 : 140) * s}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+          <SplitText text="MAIS" family={FONTS.sans} size={(L.vertical ? 44 : 40) * s} weight={400} tracking={0.4} color="#D4D4D8" state={focusIn(f, CONTROLE)} />
           <SplitText
             text="CONTROLE"
-            size={(L.vertical ? 168 : 170) * s}
-            weight={700}
-            tracking={-0.02}
+            size={(L.vertical ? 150 : 150) * s}
+            weight={750}
+            tracking={-0.04}
             state={(i, n) => {
-              // glyphs arrive from scattered offsets and lock onto the baseline
-              const k = EASE.dolly(prog(f, CONTROLE + 2 + i, CONTROLE + 34 + i, EASE.linear));
-              return {x: (hash01(i, 8) - 0.5) * 300 * (1 - k), y: (hash01(i, 9) - 0.5) * 300 * (1 - k), rz: (hash01(i, 10) - 0.5) * 40 * (1 - k), opacity: clamp(k * 3), blur: (1 - k) * 6 + 0 * n};
+              // glyphs lock onto the baseline one by one, like calibrated parts
+              const k = EASE.dolly(prog(f, CONTROLE + 2 + i * 2.5, CONTROLE + 26 + i * 2.5, EASE.linear));
+              return {y: (i % 2 ? -1 : 1) * 60 * (1 - k), opacity: clamp(k * 3), blur: (1 - k) * 6 + 0 * n};
             }}
           />
-          <div style={{width: (L.vertical ? 860 : 1100) * s, height: 2, marginTop: 10 * s, background: COLORS.accent, transform: `scaleX(${guides})`}} />
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
+
+const lerpN = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /* ------------------------------ PRODUTIVIDADE ----------------------------- */
 const MaisProdutividade: React.FC<{f: number}> = ({f}) => {

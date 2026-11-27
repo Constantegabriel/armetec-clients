@@ -1,263 +1,1017 @@
 {
-  "_comment": "Fonte única de verdade para o tempo do filme (segundos). Lido pelo Remotion e por scripts/generate-audio.py (sound design). Ao gravar a narração, ajuste os tempos das falas e beats aqui e rode `npm run audio`.",
-  "fps": 60,
-  "durationSeconds": 99,
-  "scenes": [
-    {"id": "s01-valor-do-tempo", "start": 0.0, "end": 6.0},
-    {"id": "s02-tempo-desperdicado", "start": 6.0, "end": 12.0},
-    {"id": "s03-caos-operacional", "start": 12.0, "end": 31.5},
-    {"id": "s04-mudanca-de-perspectiva", "start": 31.5, "end": 39.5},
-    {"id": "s05-tecnologia-armetec", "start": 39.5, "end": 53.5},
-    {"id": "s06-relatorios-whatsapp", "start": 53.5, "end": 66.5},
-    {"id": "s07-mobilidade", "start": 66.5, "end": 84.0},
-    {"id": "s08-resultados", "start": 84.0, "end": 93.0},
-    {"id": "s09-assinatura", "start": 93.0, "end": 99.0}
-  ],
-  "beats": {
-    "s01_lightReveal": 0.35,
-    "s01_wQuantoVale": 1.2,
-    "s01_wUmaHora": 1.95,
-    "s01_wDoSeu": 2.65,
-    "s01_wTempo": 3.3,
-    "s01_flyThrough": 5.0,
-    "s02_accelerate": 6.0,
-    "s02_wQuantasHoras": 7.1,
-    "s02_wEmpresa": 8.15,
-    "s02_wPerde": 8.95,
-    "s02_wTodosOsMeses": 9.6,
-    "s02_calZoom": 10.2,
-    "s03a": 12.0,
-    "s03a_copy": 14.2,
-    "s03a_more": 15.0,
-    "s03b": 16.5,
-    "s03b_search": 16.9,
-    "s03b_noResult": 18.0,
-    "s03b_chat": 18.4,
-    "s03b_folder": 19.3,
-    "s03b_pdf": 20.2,
-    "s03b_note": 20.9,
-    "s03b_pile": 21.3,
-    "s03c": 22.0,
-    "s03c_cycle2": 24.4,
-    "s03c_cycle3": 26.0,
-    "s03c_cycle4": 27.1,
-    "s03d": 27.6,
-    "s03_wProcessos": 27.8,
-    "s03_wAutomaticos": 29.6,
-    "s04": 31.5,
-    "s04_wProblemas": 33.4,
-    "s04_reorganize": 34.3,
-    "s04_dissolve": 35.7,
-    "s04_wCrescimento": 36.8,
-    "s05_platform": 39.5,
-    "s05_simplificam": 43.1,
-    "s05_centralizam": 46.4,
-    "s05_automatizam": 49.9,
-    "s06": 53.5,
-    "s06_clock": 56.9,
-    "s06_eight": 58.2,
-    "s06_report": 59.2,
-    "s06_send": 60.5,
-    "s06_notify": 61.5,
-    "s06_open": 62.5,
-    "s07": 66.5,
-    "s07_home": 67.6,
-    "s07_tap": 68.9,
-    "s07_open": 69.2,
-    "s07_env": 70.6,
-    "s07_devices": 73.0,
-    "s07_sale": 76.4,
-    "s07_stock": 77.2,
-    "s07_notify": 78.0,
-    "s07_tablet": 78.7,
-    "s07_final": 80.4,
-    "s08_menos": 84.3,
-    "s08_controle": 86.3,
-    "s08_produtividade": 88.3,
-    "s08_tempo": 90.3,
-    "s08_crescer": 91.6,
-    "s09_fade": 93.0,
-    "s09_lightLine": 93.6,
-    "s09_logo": 94.1,
-    "s09_slogan": 95.4,
-    "s09_black": 98.2
+ "_comment": "Fonte única de verdade para o tempo do filme (segundos). Lido pelo Remotion e por scripts/generate-audio.py (sound design). Ao gravar a narração, ajuste os tempos das falas e beats aqui e rode `npm run audio`.",
+ "fps": 60,
+ "durationSeconds": 92,
+ "scenes": [
+  {
+   "id": "s01-valor-do-tempo",
+   "start": 0.0,
+   "end": 6.0
   },
-  "narration": [
-    {"id": "n01", "start": 1.2, "end": 4.4, "text": "Quanto vale uma hora do seu tempo?"},
-    {"id": "n02", "start": 6.5, "end": 10.9, "text": "Agora imagine quantas horas sua empresa perde todos os meses."},
-    {"id": "n03", "start": 12.5, "end": 14.0, "text": "Preenchendo planilhas."},
-    {"id": "n04", "start": 16.9, "end": 18.5, "text": "Procurando informações."},
-    {"id": "n05", "start": 22.3, "end": 23.6, "text": "Repetindo tarefas."},
-    {"id": "n06", "start": 27.7, "end": 30.5, "text": "Organizando processos que poderiam ser automáticos."},
-    {"id": "n07", "start": 32.2, "end": 38.2, "text": "Enquanto você administra problemas, poderia estar administrando o crescimento da sua empresa."},
-    {"id": "n08a", "start": 40.0, "end": 42.8, "text": "A ArmeTec desenvolve sistemas personalizados"},
-    {"id": "n08b", "start": 43.1, "end": 45.1, "text": "que simplificam processos,"},
-    {"id": "n08c", "start": 46.4, "end": 48.3, "text": "centralizam informações"},
-    {"id": "n08d", "start": 49.9, "end": 51.9, "text": "e automatizam rotinas."},
-    {"id": "n09", "start": 54.0, "end": 62.6, "text": "Receba diariamente, direto no seu WhatsApp, relatórios automáticos com os resultados, indicadores e um resumo completo do dia da sua empresa."},
-    {"id": "n10a", "start": 67.2, "end": 71.8, "text": "E você não precisa estar dentro da sua empresa para estar no controle dela."},
-    {"id": "n10b", "start": 72.6, "end": 79.8, "text": "Acesse seu sistema pelo celular, notebook ou tablet, de onde estiver, com a praticidade de um aplicativo."},
-    {"id": "n11", "start": 84.3, "end": 85.5, "text": "Menos tarefas."},
-    {"id": "n12", "start": 86.3, "end": 87.5, "text": "Mais controle."},
-    {"id": "n13", "start": 88.3, "end": 89.8, "text": "Mais produtividade."},
-    {"id": "n14", "start": 90.3, "end": 92.4, "text": "Mais tempo para crescer."},
-    {"id": "n15", "start": 94.1, "end": 94.9, "text": "ArmeTec."},
-    {"id": "n16", "start": 95.4, "end": 97.6, "text": "Tecnologia que devolve o seu tempo."}
-  ],
-  "sfx": [
-    {"t": 0.0, "type": "air", "gain": 0.35, "dur": 12.0},
-    {"t": 0.35, "type": "sub-hit", "gain": 0.45},
-    {"t": 0.3, "type": "light", "gain": 0.5},
-    {"t": 1.2, "type": "tick", "gain": 0.55},
-    {"t": 1.95, "type": "tick", "gain": 0.55},
-    {"t": 2.65, "type": "tick", "gain": 0.55},
-    {"t": 3.3, "type": "type-reveal", "gain": 0.7},
-    {"t": 3.3, "type": "sub-hit", "gain": 0.55},
-    {"t": 4.2, "type": "tick", "gain": 0.5},
-    {"t": 4.6, "type": "reverse-whoosh", "gain": 0.45},
-    {"t": 5.05, "type": "whoosh-long", "gain": 0.65},
-    {"t": 6.0, "type": "clock-whirr", "gain": 0.5, "dur": 6.0},
-    {"t": 6.3, "type": "time-rush", "gain": 0.35, "dur": 5.6},
-    {"t": 7.1, "type": "type-reveal", "gain": 0.35},
-    {"t": 8.15, "type": "type-reveal", "gain": 0.35},
-    {"t": 8.95, "type": "impact", "gain": 0.8},
-    {"t": 9.6, "type": "type-reveal", "gain": 0.35},
-    {"t": 10.2, "type": "whoosh-long", "gain": 0.5},
-    {"t": 11.7, "type": "swish", "gain": 0.4},
-
-    {"t": 12.0, "type": "room", "gain": 0.35, "dur": 17.6},
-    {"t": 12.2, "type": "typing", "gain": 0.5, "dur": 2.0},
-    {"t": 14.2, "type": "click", "gain": 0.4},
-    {"t": 14.35, "type": "copy", "gain": 0.45},
-    {"t": 14.75, "type": "paste", "gain": 0.45},
-    {"t": 15.0, "type": "window-open", "gain": 0.4},
-    {"t": 15.1, "type": "typing", "gain": 0.4, "dur": 1.3},
-    {"t": 15.6, "type": "window-open", "gain": 0.35},
-    {"t": 16.3, "type": "whoosh", "gain": 0.45},
-    {"t": 16.9, "type": "typing", "gain": 0.45, "dur": 1.0},
-    {"t": 17.95, "type": "click", "gain": 0.4},
-    {"t": 18.05, "type": "search", "gain": 0.4},
-    {"t": 18.4, "type": "window-open", "gain": 0.4},
-    {"t": 18.6, "type": "scroll", "gain": 0.35, "dur": 0.7},
-    {"t": 19.3, "type": "window-open", "gain": 0.4},
-    {"t": 19.75, "type": "click", "gain": 0.35},
-    {"t": 20.0, "type": "click", "gain": 0.35},
-    {"t": 20.2, "type": "paper", "gain": 0.5},
-    {"t": 20.55, "type": "denied", "gain": 0.35},
-    {"t": 20.9, "type": "paper", "gain": 0.4},
-    {"t": 21.3, "type": "window-open", "gain": 0.3},
-    {"t": 21.45, "type": "window-open", "gain": 0.3},
-    {"t": 21.6, "type": "window-open", "gain": 0.3},
-    {"t": 21.7, "type": "whoosh", "gain": 0.45},
-    {"t": 22.0, "type": "window-open", "gain": 0.4},
-    {"t": 22.35, "type": "typing", "gain": 0.45, "dur": 1.2},
-    {"t": 23.65, "type": "click", "gain": 0.4},
-    {"t": 23.9, "type": "save", "gain": 0.45},
-    {"t": 24.25, "type": "swish", "gain": 0.4},
-    {"t": 24.55, "type": "typing", "gain": 0.45, "dur": 0.9},
-    {"t": 25.5, "type": "click", "gain": 0.4},
-    {"t": 25.7, "type": "save", "gain": 0.45},
-    {"t": 25.9, "type": "swish", "gain": 0.4},
-    {"t": 26.1, "type": "typing", "gain": 0.45, "dur": 0.55},
-    {"t": 26.7, "type": "click", "gain": 0.4},
-    {"t": 26.85, "type": "save", "gain": 0.45},
-    {"t": 27.0, "type": "swish", "gain": 0.4},
-    {"t": 27.15, "type": "typing", "gain": 0.4, "dur": 0.35},
-    {"t": 27.5, "type": "save", "gain": 0.4},
-    {"t": 27.6, "type": "riser", "gain": 0.55, "dur": 2.0},
-    {"t": 27.7, "type": "notification", "gain": 0.25},
-    {"t": 28.1, "type": "notification", "gain": 0.22},
-    {"t": 28.4, "type": "paper", "gain": 0.3},
-    {"t": 28.7, "type": "notification", "gain": 0.25},
-    {"t": 29.0, "type": "paper", "gain": 0.3},
-    {"t": 29.6, "type": "freeze", "gain": 0.9},
-
-    {"t": 31.6, "type": "air", "gain": 0.3, "dur": 8.0},
-    {"t": 33.4, "type": "type-reveal", "gain": 0.55},
-    {"t": 33.4, "type": "sub-hit", "gain": 0.6},
-    {"t": 34.3, "type": "align", "gain": 0.45, "dur": 2.2},
-    {"t": 35.7, "type": "shatter", "gain": 0.55},
-    {"t": 36.75, "type": "resolve", "gain": 0.7},
-
-    {"t": 39.4, "type": "whoosh-long", "gain": 0.45},
-    {"t": 39.8, "type": "dock", "gain": 0.4},
-    {"t": 40.5, "type": "data", "gain": 0.35, "dur": 1.5},
-    {"t": 42.6, "type": "whoosh", "gain": 0.45},
-    {"t": 43.1, "type": "type-reveal", "gain": 0.35},
-    {"t": 43.8, "type": "align", "gain": 0.4, "dur": 1.8},
-    {"t": 45.9, "type": "whoosh", "gain": 0.45},
-    {"t": 46.4, "type": "type-reveal", "gain": 0.35},
-    {"t": 46.6, "type": "data", "gain": 0.4, "dur": 1.8},
-    {"t": 48.0, "type": "resolve", "gain": 0.35},
-    {"t": 49.4, "type": "whoosh", "gain": 0.45},
-    {"t": 49.9, "type": "type-reveal", "gain": 0.35},
-    {"t": 50.13, "type": "automation", "gain": 0.45},
-    {"t": 50.5, "type": "success", "gain": 0.35},
-    {"t": 50.87, "type": "success", "gain": 0.35},
-    {"t": 51.23, "type": "success", "gain": 0.35},
-    {"t": 51.6, "type": "success", "gain": 0.35},
-    {"t": 51.97, "type": "success", "gain": 0.4},
-
-    {"t": 53.4, "type": "whoosh", "gain": 0.4},
-    {"t": 53.9, "type": "data", "gain": 0.3, "dur": 0.4},
-    {"t": 54.4, "type": "data", "gain": 0.3, "dur": 0.4},
-    {"t": 54.9, "type": "data", "gain": 0.3, "dur": 0.4},
-    {"t": 55.4, "type": "data", "gain": 0.3, "dur": 0.4},
-    {"t": 55.9, "type": "data", "gain": 0.3, "dur": 0.4},
-    {"t": 56.4, "type": "data", "gain": 0.3, "dur": 0.4},
-    {"t": 56.9, "type": "whoosh-soft", "gain": 0.4},
-    {"t": 57.2, "type": "digital-tick", "gain": 0.45},
-    {"t": 57.6, "type": "digital-tick", "gain": 0.45},
-    {"t": 57.9, "type": "digital-tick", "gain": 0.45},
-    {"t": 58.2, "type": "automation", "gain": 0.7},
-    {"t": 58.3, "type": "sub-hit", "gain": 0.45},
-    {"t": 58.5, "type": "converge", "gain": 0.5, "dur": 1.2},
-    {"t": 59.2, "type": "data", "gain": 0.4, "dur": 1.1},
-    {"t": 60.4, "type": "send", "gain": 0.55},
-    {"t": 60.5, "type": "whoosh-long", "gain": 0.45},
-    {"t": 61.5, "type": "message", "gain": 0.75},
-    {"t": 62.45, "type": "tap", "gain": 0.4},
-    {"t": 62.6, "type": "whoosh-soft", "gain": 0.4},
-    {"t": 63.0, "type": "data", "gain": 0.3, "dur": 2.4},
-
-    {"t": 66.4, "type": "whoosh-soft", "gain": 0.45},
-    {"t": 67.6, "type": "swish", "gain": 0.3},
-    {"t": 68.9, "type": "tap", "gain": 0.55},
-    {"t": 69.05, "type": "app-open", "gain": 0.6},
-    {"t": 70.6, "type": "air", "gain": 0.3, "dur": 13.4},
-    {"t": 70.6, "type": "whoosh-long", "gain": 0.4},
-    {"t": 73.0, "type": "whoosh-long", "gain": 0.5},
-    {"t": 74.4, "type": "whoosh-soft", "gain": 0.35},
-    {"t": 75.6, "type": "whoosh-soft", "gain": 0.35},
-    {"t": 76.0, "type": "typing", "gain": 0.35, "dur": 0.35},
-    {"t": 76.4, "type": "click", "gain": 0.45},
-    {"t": 76.5, "type": "save", "gain": 0.4},
-    {"t": 77.2, "type": "data", "gain": 0.4, "dur": 0.6},
-    {"t": 78.0, "type": "notification", "gain": 0.55},
-    {"t": 78.7, "type": "data", "gain": 0.45, "dur": 0.8},
-    {"t": 79.5, "type": "success", "gain": 0.4},
-    {"t": 80.4, "type": "whoosh-long", "gain": 0.45},
-    {"t": 81.2, "type": "resolve", "gain": 0.45},
-    {"t": 83.6, "type": "riser", "gain": 0.45, "dur": 0.8},
-
-    {"t": 84.3, "type": "impact", "gain": 0.75},
-    {"t": 84.4, "type": "collapse", "gain": 0.5, "dur": 1.2},
-    {"t": 86.3, "type": "impact", "gain": 0.75},
-    {"t": 86.4, "type": "align", "gain": 0.5, "dur": 0.9},
-    {"t": 88.3, "type": "impact", "gain": 0.8},
-    {"t": 88.4, "type": "rise", "gain": 0.5, "dur": 1.6},
-    {"t": 90.1, "type": "air", "gain": 0.3, "dur": 3.2},
-    {"t": 90.3, "type": "tick", "gain": 0.5},
-    {"t": 90.8, "type": "tick-soft", "gain": 0.45},
-    {"t": 91.3, "type": "tick-soft", "gain": 0.45},
-    {"t": 91.6, "type": "resolve", "gain": 0.75},
-    {"t": 91.6, "type": "sub-hit", "gain": 0.6},
-
-    {"t": 93.55, "type": "light", "gain": 0.6},
-    {"t": 93.8, "type": "construct", "gain": 0.6, "dur": 1.6},
-    {"t": 94.9, "type": "lock", "gain": 0.5},
-    {"t": 95.1, "type": "lock", "gain": 0.45},
-    {"t": 95.3, "type": "lock", "gain": 0.45},
-    {"t": 95.35, "type": "logo", "gain": 0.9}
-  ]
+  {
+   "id": "s02-tempo-desperdicado",
+   "start": 6.0,
+   "end": 12.0
+  },
+  {
+   "id": "s03-caos-operacional",
+   "start": 12.0,
+   "end": 29.6
+  },
+  {
+   "id": "s04-mudanca-de-perspectiva",
+   "start": 29.6,
+   "end": 36.6
+  },
+  {
+   "id": "s05-tecnologia-armetec",
+   "start": 36.6,
+   "end": 48.6
+  },
+  {
+   "id": "s06-relatorios-whatsapp",
+   "start": 48.6,
+   "end": 60.6
+  },
+  {
+   "id": "s07-mobilidade",
+   "start": 60.6,
+   "end": 76.6
+  },
+  {
+   "id": "s08-resultados",
+   "start": 76.6,
+   "end": 85.6
+  },
+  {
+   "id": "s09-assinatura",
+   "start": 85.6,
+   "end": 92.0
+  }
+ ],
+ "beats": {
+  "s01_lightReveal": 0.35,
+  "s01_wQuantoVale": 1.2,
+  "s01_wUmaHora": 1.95,
+  "s01_wDoSeu": 2.65,
+  "s01_wTempo": 3.3,
+  "s01_flyThrough": 5.0,
+  "s02_accelerate": 6.0,
+  "s02_wQuantasHoras": 7.1,
+  "s02_wEmpresa": 8.15,
+  "s02_wPerde": 8.95,
+  "s02_wTodosOsMeses": 9.6,
+  "s02_calZoom": 10.2,
+  "s03a": 12.0,
+  "s03a_copy": 13.956,
+  "s03a_more": 14.667,
+  "s03b": 16.0,
+  "s03b_search": 16.364,
+  "s03b_noResult": 17.364,
+  "s03b_chat": 17.727,
+  "s03b_folder": 18.545,
+  "s03b_pdf": 19.364,
+  "s03b_note": 20.0,
+  "s03b_pile": 20.364,
+  "s03c": 21.0,
+  "s03c_cycle2": 22.971,
+  "s03c_cycle3": 24.286,
+  "s03c_cycle4": 25.189,
+  "s03d": 25.6,
+  "s03_wProcessos": 25.805,
+  "s03_wAutomaticos": 27.651,
+  "s04": 29.6,
+  "s04_wProblemas": 31.262,
+  "s04_reorganize": 32.05,
+  "s04_dissolve": 33.275,
+  "s04_wCrescimento": 34.237,
+  "s05_platform": 36.6,
+  "s05_simplificam": 39.686,
+  "s05_centralizam": 42.514,
+  "s05_automatizam": 45.514,
+  "s06": 48.6,
+  "s06_clock": 51.738,
+  "s06_eight": 52.938,
+  "s06_report": 53.862,
+  "s06_send": 55.062,
+  "s06_notify": 55.985,
+  "s06_open": 56.908,
+  "s07": 60.6,
+  "s07_home": 61.606,
+  "s07_tap": 62.794,
+  "s07_open": 63.069,
+  "s07_env": 64.349,
+  "s07_devices": 66.543,
+  "s07_sale": 69.651,
+  "s07_stock": 70.383,
+  "s07_notify": 71.114,
+  "s07_tablet": 71.754,
+  "s07_final": 73.309,
+  "s08_menos": 76.9,
+  "s08_controle": 78.9,
+  "s08_produtividade": 80.9,
+  "s08_tempo": 82.9,
+  "s08_crescer": 84.2,
+  "s09_fade": 85.6,
+  "s09_lightLine": 86.24,
+  "s09_logo": 87.4,
+  "s09_slogan": 89.0,
+  "s09_black": 91.2
+ },
+ "narration": [
+  {
+   "id": "n01",
+   "start": 1.2,
+   "end": 4.4,
+   "text": "Quanto vale uma hora do seu tempo?"
+  },
+  {
+   "id": "n02",
+   "start": 6.5,
+   "end": 10.9,
+   "text": "Agora imagine quantas horas sua empresa perde todos os meses."
+  },
+  {
+   "id": "n03",
+   "start": 12.444,
+   "end": 13.778,
+   "text": "Preenchendo planilhas."
+  },
+  {
+   "id": "n04",
+   "start": 16.364,
+   "end": 17.818,
+   "text": "Procurando informações."
+  },
+  {
+   "id": "n05",
+   "start": 21.246,
+   "end": 22.314,
+   "text": "Repetindo tarefas."
+  },
+  {
+   "id": "n06",
+   "start": 25.703,
+   "end": 28.574,
+   "text": "Organizando processos que poderiam ser automáticos."
+  },
+  {
+   "id": "n07",
+   "start": 30.213,
+   "end": 35.463,
+   "text": "Enquanto você administra problemas, poderia estar administrando o crescimento da sua empresa."
+  },
+  {
+   "id": "n08a",
+   "start": 37.029,
+   "end": 39.429,
+   "text": "A ArmeTec desenvolve sistemas personalizados"
+  },
+  {
+   "id": "n08b",
+   "start": 39.686,
+   "end": 41.4,
+   "text": "que simplificam processos,"
+  },
+  {
+   "id": "n08c",
+   "start": 42.514,
+   "end": 44.143,
+   "text": "centralizam informações"
+  },
+  {
+   "id": "n08d",
+   "start": 45.514,
+   "end": 47.229,
+   "text": "e automatizam rotinas."
+  },
+  {
+   "id": "n09",
+   "start": 49.062,
+   "end": 57.0,
+   "text": "Receba diariamente, direto no seu WhatsApp, relatórios automáticos com os resultados, indicadores e um resumo completo do dia da sua empresa."
+  },
+  {
+   "id": "n10a",
+   "start": 61.24,
+   "end": 65.446,
+   "text": "E você não precisa estar dentro da sua empresa para estar no controle dela."
+  },
+  {
+   "id": "n10b",
+   "start": 66.177,
+   "end": 72.76,
+   "text": "Acesse seu sistema pelo celular, notebook ou tablet, de onde estiver, com a praticidade de um aplicativo."
+  },
+  {
+   "id": "n11",
+   "start": 76.9,
+   "end": 78.1,
+   "text": "Menos tarefas."
+  },
+  {
+   "id": "n12",
+   "start": 78.9,
+   "end": 80.1,
+   "text": "Mais controle."
+  },
+  {
+   "id": "n13",
+   "start": 80.9,
+   "end": 82.4,
+   "text": "Mais produtividade."
+  },
+  {
+   "id": "n14",
+   "start": 82.9,
+   "end": 85.0,
+   "text": "Mais tempo para crescer."
+  },
+  {
+   "id": "n15",
+   "start": 86.773,
+   "end": 87.627,
+   "text": "ArmeTec."
+  },
+  {
+   "id": "n16",
+   "start": 88.16,
+   "end": 90.507,
+   "text": "Tecnologia que devolve o seu tempo."
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.0,
+   "type": "air",
+   "gain": 0.35,
+   "dur": 12.0
+  },
+  {
+   "t": 0.35,
+   "type": "sub-hit",
+   "gain": 0.45
+  },
+  {
+   "t": 0.3,
+   "type": "light",
+   "gain": 0.5
+  },
+  {
+   "t": 1.2,
+   "type": "tick",
+   "gain": 0.55
+  },
+  {
+   "t": 1.95,
+   "type": "tick",
+   "gain": 0.55
+  },
+  {
+   "t": 2.65,
+   "type": "tick",
+   "gain": 0.55
+  },
+  {
+   "t": 3.3,
+   "type": "type-reveal",
+   "gain": 0.7
+  },
+  {
+   "t": 3.3,
+   "type": "sub-hit",
+   "gain": 0.55
+  },
+  {
+   "t": 4.2,
+   "type": "tick",
+   "gain": 0.5
+  },
+  {
+   "t": 4.6,
+   "type": "reverse-whoosh",
+   "gain": 0.45
+  },
+  {
+   "t": 5.05,
+   "type": "whoosh-long",
+   "gain": 0.65
+  },
+  {
+   "t": 6.0,
+   "type": "clock-whirr",
+   "gain": 0.5,
+   "dur": 6.0
+  },
+  {
+   "t": 6.3,
+   "type": "time-rush",
+   "gain": 0.35,
+   "dur": 5.6
+  },
+  {
+   "t": 7.1,
+   "type": "type-reveal",
+   "gain": 0.35
+  },
+  {
+   "t": 8.15,
+   "type": "type-reveal",
+   "gain": 0.35
+  },
+  {
+   "t": 8.95,
+   "type": "impact",
+   "gain": 0.8
+  },
+  {
+   "t": 9.6,
+   "type": "type-reveal",
+   "gain": 0.35
+  },
+  {
+   "t": 10.2,
+   "type": "whoosh-long",
+   "gain": 0.5
+  },
+  {
+   "t": 11.7,
+   "type": "swish",
+   "gain": 0.4
+  },
+  {
+   "t": 12.0,
+   "type": "room",
+   "gain": 0.35,
+   "dur": 17.6
+  },
+  {
+   "t": 12.178,
+   "type": "typing",
+   "gain": 0.5,
+   "dur": 1.78
+  },
+  {
+   "t": 13.956,
+   "type": "click",
+   "gain": 0.4
+  },
+  {
+   "t": 14.089,
+   "type": "copy",
+   "gain": 0.45
+  },
+  {
+   "t": 14.444,
+   "type": "paste",
+   "gain": 0.45
+  },
+  {
+   "t": 14.667,
+   "type": "window-open",
+   "gain": 0.4
+  },
+  {
+   "t": 14.756,
+   "type": "typing",
+   "gain": 0.4,
+   "dur": 1.16
+  },
+  {
+   "t": 15.2,
+   "type": "window-open",
+   "gain": 0.35
+  },
+  {
+   "t": 15.822,
+   "type": "whoosh",
+   "gain": 0.45
+  },
+  {
+   "t": 16.364,
+   "type": "typing",
+   "gain": 0.45,
+   "dur": 0.91
+  },
+  {
+   "t": 17.318,
+   "type": "click",
+   "gain": 0.4
+  },
+  {
+   "t": 17.409,
+   "type": "search",
+   "gain": 0.4
+  },
+  {
+   "t": 17.727,
+   "type": "window-open",
+   "gain": 0.4
+  },
+  {
+   "t": 17.909,
+   "type": "scroll",
+   "gain": 0.35,
+   "dur": 0.64
+  },
+  {
+   "t": 18.545,
+   "type": "window-open",
+   "gain": 0.4
+  },
+  {
+   "t": 18.955,
+   "type": "click",
+   "gain": 0.35
+  },
+  {
+   "t": 19.182,
+   "type": "click",
+   "gain": 0.35
+  },
+  {
+   "t": 19.364,
+   "type": "paper",
+   "gain": 0.5
+  },
+  {
+   "t": 19.682,
+   "type": "denied",
+   "gain": 0.35
+  },
+  {
+   "t": 20.0,
+   "type": "paper",
+   "gain": 0.4
+  },
+  {
+   "t": 20.364,
+   "type": "window-open",
+   "gain": 0.3
+  },
+  {
+   "t": 20.5,
+   "type": "window-open",
+   "gain": 0.3
+  },
+  {
+   "t": 20.636,
+   "type": "window-open",
+   "gain": 0.3
+  },
+  {
+   "t": 20.727,
+   "type": "whoosh",
+   "gain": 0.45
+  },
+  {
+   "t": 21.0,
+   "type": "window-open",
+   "gain": 0.4
+  },
+  {
+   "t": 21.288,
+   "type": "typing",
+   "gain": 0.45,
+   "dur": 0.99
+  },
+  {
+   "t": 22.355,
+   "type": "click",
+   "gain": 0.4
+  },
+  {
+   "t": 22.561,
+   "type": "save",
+   "gain": 0.45
+  },
+  {
+   "t": 22.848,
+   "type": "swish",
+   "gain": 0.4
+  },
+  {
+   "t": 23.095,
+   "type": "typing",
+   "gain": 0.45,
+   "dur": 0.74
+  },
+  {
+   "t": 23.875,
+   "type": "click",
+   "gain": 0.4
+  },
+  {
+   "t": 24.039,
+   "type": "save",
+   "gain": 0.45
+  },
+  {
+   "t": 24.204,
+   "type": "swish",
+   "gain": 0.4
+  },
+  {
+   "t": 24.368,
+   "type": "typing",
+   "gain": 0.45,
+   "dur": 0.45
+  },
+  {
+   "t": 24.861,
+   "type": "click",
+   "gain": 0.4
+  },
+  {
+   "t": 24.984,
+   "type": "save",
+   "gain": 0.45
+  },
+  {
+   "t": 25.107,
+   "type": "swish",
+   "gain": 0.4
+  },
+  {
+   "t": 25.23,
+   "type": "typing",
+   "gain": 0.4,
+   "dur": 0.29
+  },
+  {
+   "t": 25.518,
+   "type": "save",
+   "gain": 0.4
+  },
+  {
+   "t": 25.6,
+   "type": "riser",
+   "gain": 0.55,
+   "dur": 1.64
+  },
+  {
+   "t": 25.703,
+   "type": "notification",
+   "gain": 0.25
+  },
+  {
+   "t": 26.113,
+   "type": "notification",
+   "gain": 0.22
+  },
+  {
+   "t": 26.421,
+   "type": "paper",
+   "gain": 0.3
+  },
+  {
+   "t": 26.728,
+   "type": "notification",
+   "gain": 0.25
+  },
+  {
+   "t": 27.036,
+   "type": "paper",
+   "gain": 0.3
+  },
+  {
+   "t": 27.651,
+   "type": "freeze",
+   "gain": 0.9
+  },
+  {
+   "t": 29.688,
+   "type": "air",
+   "gain": 0.3,
+   "dur": 7.0
+  },
+  {
+   "t": 31.262,
+   "type": "type-reveal",
+   "gain": 0.55
+  },
+  {
+   "t": 31.262,
+   "type": "sub-hit",
+   "gain": 0.6
+  },
+  {
+   "t": 32.05,
+   "type": "align",
+   "gain": 0.45,
+   "dur": 1.93
+  },
+  {
+   "t": 33.275,
+   "type": "shatter",
+   "gain": 0.55
+  },
+  {
+   "t": 34.194,
+   "type": "resolve",
+   "gain": 0.7
+  },
+  {
+   "t": 36.513,
+   "type": "whoosh-long",
+   "gain": 0.45
+  },
+  {
+   "t": 36.857,
+   "type": "dock",
+   "gain": 0.4
+  },
+  {
+   "t": 37.457,
+   "type": "data",
+   "gain": 0.35,
+   "dur": 1.29
+  },
+  {
+   "t": 39.257,
+   "type": "whoosh",
+   "gain": 0.45
+  },
+  {
+   "t": 39.686,
+   "type": "type-reveal",
+   "gain": 0.35
+  },
+  {
+   "t": 40.286,
+   "type": "align",
+   "gain": 0.4,
+   "dur": 1.54
+  },
+  {
+   "t": 42.086,
+   "type": "whoosh",
+   "gain": 0.45
+  },
+  {
+   "t": 42.514,
+   "type": "type-reveal",
+   "gain": 0.35
+  },
+  {
+   "t": 42.686,
+   "type": "data",
+   "gain": 0.4,
+   "dur": 1.54
+  },
+  {
+   "t": 43.886,
+   "type": "resolve",
+   "gain": 0.35
+  },
+  {
+   "t": 45.086,
+   "type": "whoosh",
+   "gain": 0.45
+  },
+  {
+   "t": 45.514,
+   "type": "type-reveal",
+   "gain": 0.35
+  },
+  {
+   "t": 45.711,
+   "type": "automation",
+   "gain": 0.45
+  },
+  {
+   "t": 46.029,
+   "type": "success",
+   "gain": 0.35
+  },
+  {
+   "t": 46.346,
+   "type": "success",
+   "gain": 0.35
+  },
+  {
+   "t": 46.654,
+   "type": "success",
+   "gain": 0.35
+  },
+  {
+   "t": 46.971,
+   "type": "success",
+   "gain": 0.35
+  },
+  {
+   "t": 47.289,
+   "type": "success",
+   "gain": 0.4
+  },
+  {
+   "t": 48.514,
+   "type": "whoosh",
+   "gain": 0.4
+  },
+  {
+   "t": 48.969,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 0.37
+  },
+  {
+   "t": 49.431,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 0.37
+  },
+  {
+   "t": 49.892,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 0.37
+  },
+  {
+   "t": 50.354,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 0.37
+  },
+  {
+   "t": 50.815,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 0.37
+  },
+  {
+   "t": 51.277,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 0.37
+  },
+  {
+   "t": 51.738,
+   "type": "whoosh-soft",
+   "gain": 0.4
+  },
+  {
+   "t": 52.015,
+   "type": "digital-tick",
+   "gain": 0.45
+  },
+  {
+   "t": 52.385,
+   "type": "digital-tick",
+   "gain": 0.45
+  },
+  {
+   "t": 52.662,
+   "type": "digital-tick",
+   "gain": 0.45
+  },
+  {
+   "t": 52.938,
+   "type": "automation",
+   "gain": 0.7
+  },
+  {
+   "t": 53.031,
+   "type": "sub-hit",
+   "gain": 0.45
+  },
+  {
+   "t": 53.215,
+   "type": "converge",
+   "gain": 0.5,
+   "dur": 1.11
+  },
+  {
+   "t": 53.862,
+   "type": "data",
+   "gain": 0.4,
+   "dur": 1.02
+  },
+  {
+   "t": 54.969,
+   "type": "send",
+   "gain": 0.55
+  },
+  {
+   "t": 55.062,
+   "type": "whoosh-long",
+   "gain": 0.45
+  },
+  {
+   "t": 55.985,
+   "type": "phone-notify",
+   "gain": 0.8
+  },
+  {
+   "t": 56.862,
+   "type": "tap",
+   "gain": 0.4
+  },
+  {
+   "t": 57.0,
+   "type": "whoosh-soft",
+   "gain": 0.4
+  },
+  {
+   "t": 57.369,
+   "type": "data",
+   "gain": 0.3,
+   "dur": 2.22
+  },
+  {
+   "t": 60.508,
+   "type": "whoosh-soft",
+   "gain": 0.45
+  },
+  {
+   "t": 61.606,
+   "type": "swish",
+   "gain": 0.3
+  },
+  {
+   "t": 62.794,
+   "type": "tap",
+   "gain": 0.55
+  },
+  {
+   "t": 62.931,
+   "type": "app-open",
+   "gain": 0.6
+  },
+  {
+   "t": 64.349,
+   "type": "air",
+   "gain": 0.3,
+   "dur": 12.25
+  },
+  {
+   "t": 64.349,
+   "type": "whoosh-long",
+   "gain": 0.4
+  },
+  {
+   "t": 66.543,
+   "type": "whoosh-long",
+   "gain": 0.5
+  },
+  {
+   "t": 67.823,
+   "type": "whoosh-soft",
+   "gain": 0.35
+  },
+  {
+   "t": 68.92,
+   "type": "whoosh-soft",
+   "gain": 0.35
+  },
+  {
+   "t": 69.286,
+   "type": "typing",
+   "gain": 0.35,
+   "dur": 0.32
+  },
+  {
+   "t": 69.651,
+   "type": "click",
+   "gain": 0.45
+  },
+  {
+   "t": 69.743,
+   "type": "save",
+   "gain": 0.4
+  },
+  {
+   "t": 70.383,
+   "type": "data",
+   "gain": 0.4,
+   "dur": 0.55
+  },
+  {
+   "t": 71.114,
+   "type": "notification",
+   "gain": 0.55
+  },
+  {
+   "t": 71.754,
+   "type": "data",
+   "gain": 0.45,
+   "dur": 0.73
+  },
+  {
+   "t": 72.486,
+   "type": "success",
+   "gain": 0.4
+  },
+  {
+   "t": 73.309,
+   "type": "whoosh-long",
+   "gain": 0.45
+  },
+  {
+   "t": 74.04,
+   "type": "resolve",
+   "gain": 0.45
+  },
+  {
+   "t": 76.234,
+   "type": "riser",
+   "gain": 0.45,
+   "dur": 0.73
+  },
+  {
+   "t": 76.9,
+   "type": "impact",
+   "gain": 0.75
+  },
+  {
+   "t": 77.0,
+   "type": "collapse",
+   "gain": 0.5,
+   "dur": 1.2
+  },
+  {
+   "t": 78.9,
+   "type": "impact",
+   "gain": 0.75
+  },
+  {
+   "t": 79.0,
+   "type": "align",
+   "gain": 0.5,
+   "dur": 0.9
+  },
+  {
+   "t": 80.9,
+   "type": "impact",
+   "gain": 0.8
+  },
+  {
+   "t": 81.0,
+   "type": "rise",
+   "gain": 0.5,
+   "dur": 1.6
+  },
+  {
+   "t": 82.7,
+   "type": "air",
+   "gain": 0.3,
+   "dur": 3.2
+  },
+  {
+   "t": 82.9,
+   "type": "tick",
+   "gain": 0.5
+  },
+  {
+   "t": 83.4,
+   "type": "tick-soft",
+   "gain": 0.45
+  },
+  {
+   "t": 83.9,
+   "type": "tick-soft",
+   "gain": 0.45
+  },
+  {
+   "t": 84.2,
+   "type": "resolve",
+   "gain": 0.75
+  },
+  {
+   "t": 84.2,
+   "type": "sub-hit",
+   "gain": 0.6
+  },
+  {
+   "t": 86.187,
+   "type": "light",
+   "gain": 0.6
+  },
+  {
+   "t": 86.453,
+   "type": "construct",
+   "gain": 0.6,
+   "dur": 1.71
+  },
+  {
+   "t": 87.627,
+   "type": "lock",
+   "gain": 0.5
+  },
+  {
+   "t": 87.84,
+   "type": "lock",
+   "gain": 0.45
+  },
+  {
+   "t": 88.053,
+   "type": "lock",
+   "gain": 0.45
+  },
+  {
+   "t": 88.107,
+   "type": "logo",
+   "gain": 0.9
+  }
+ ]
 }

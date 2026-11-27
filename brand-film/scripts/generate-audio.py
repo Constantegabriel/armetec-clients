@@ -342,6 +342,17 @@ def s_message():
     return norm(out, 0.8)
 
 
+def s_phone_notify():
+    # iPhone-style alert (original): crisp glassy marimba, two bright notes, very short
+    out = np.zeros((int(0.9 * SR), 2))
+    for i, f0 in enumerate([1318.5, 1975.5]):
+        t = T(0.6)
+        note = (sine(f0, t) * env_exp(t, 9) + sine(f0 * 3.0, t) * env_exp(t, 30) * 0.25 + sine(f0 * 4.2, t) * env_exp(t, 45) * 0.12) * np.clip(t / 0.002, 0, 1)
+        mix_into(out, stereo(note * (0.9 - i * 0.1)), i * 0.12)
+    out += convolve(out, reverb_ir(0.8, 5, 10000)) * 0.15
+    return norm(out, 0.8)
+
+
 def s_freeze():
     out = np.zeros((int(3.0 * SR), 2))
     # suck-in (reverse air) into a hard stop
@@ -547,6 +558,7 @@ def render_cue(c):
         'save': s_save,
         'notification': s_notification,
         'message': s_message,
+        'phone-notify': s_phone_notify,
         'freeze': s_freeze,
         'align': lambda: s_align(d),
         'shatter': s_shatter,

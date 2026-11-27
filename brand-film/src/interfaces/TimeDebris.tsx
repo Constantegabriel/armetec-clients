@@ -191,7 +191,7 @@ export const TimeDebris: React.FC<{f: number; start: number; end: number}> = ({f
 };
 
 const BigCalendar: React.FC<{f: number; end: number}> = ({f, end}) => {
-  const a = clamp((f - (end - 64)) / 26);
+  const a = clamp((f - (end - 54)) / 22);
   if (a <= 0) return null;
   return (
     <Plane x={CAL.x} y={CAL.y} z={CAL.z} w={CAL.w} h={CAL.h} opacity={EASE.out(a)} sharp>

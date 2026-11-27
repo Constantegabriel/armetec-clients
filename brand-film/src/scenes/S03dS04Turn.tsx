@@ -15,7 +15,7 @@ import {EASE} from '../utils/easing';
 import {useLayout} from '../utils/layout';
 import {clamp, lerp} from '../utils/math';
 import {hash01} from '../utils/random';
-import {beat, prog, sec} from '../utils/time';
+import {beat, prog, sceneEnd} from '../utils/time';
 
 /**
  * SCENES 03d + 04 — accumulation: every kind of operational fragment flies in
@@ -31,7 +31,7 @@ const PROB = beat('s04_wProblemas');
 const REORG = beat('s04_reorganize');
 const DISSOLVE = beat('s04_dissolve');
 const GROW = beat('s04_wCrescimento');
-const END = sec(39.5);
+const END = sceneEnd('s04-mudanca-de-perspectiva');
 
 const PROB_Z = -10400;
 export const GRID_Z = -10900;
@@ -289,7 +289,7 @@ const TypeS4: React.FC<{f: number}> = ({f}) => {
   return (
     <>
       <Title f={f} at={PROB - 70} out={PROB + 110} anchor="center" offset={-off} scrim={0.6} lines={[eyebrow('ENQUANTO VOCÊ ADMINISTRA', 36)]} />
-      <Title f={f} at={sec(36.0)} out={END - 30} anchor="center" offset={-off} scrim={0.6} lines={[eyebrow('PODERIA ESTAR ADMINISTRANDO O', 32)]} />
+      <Title f={f} at={DISSOLVE + 18} out={END - 30} anchor="center" offset={-off} scrim={0.6} lines={[eyebrow('PODERIA ESTAR ADMINISTRANDO O', 32)]} />
       <Title f={f} at={GROW + 30} out={END - 24} anchor="center" offset={off} scrim={1} lines={[{...eyebrow('DA SUA EMPRESA', 36), color: COLORS.white}]} />
     </>
   );

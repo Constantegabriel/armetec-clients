@@ -4,7 +4,7 @@ import {camSmooth, type SmoothKey, type V3} from '../animations/camera';
 import {CssWorld, Plane} from '../components/CssWorld';
 import {COLORS, FONTS} from '../config/theme';
 import {DAY_EVENTS, DayFeed, DigitalClock, KpiCard, REPORT, ReportDoc} from '../interfaces/DailyReport';
-import {Floor, Laptop, LAPTOP, Phone, PHONE, TABLET, Tablet} from '../interfaces/Devices';
+import {ContactShadow, Floor, Laptop, LAPTOP, Monitor, MONITOR, Phone, PHONE} from '../interfaces/Devices';
 import {ChatAppIcon, HOME_ICON, HomeScreen, LockScreen, SCREEN, WhatsAppChat} from '../interfaces/PhoneScreens';
 import {AppLaptop, AppPhone, AppTablet, type SyncState} from '../interfaces/SystemApps';
 import {Label} from '../interfaces/ui';
@@ -12,7 +12,7 @@ import {Title, eyebrow, keyline} from '../typography/Title';
 import {EASE} from '../utils/easing';
 import {useLayout} from '../utils/layout';
 import {clamp, lerp} from '../utils/math';
-import {beat, prog, sec} from '../utils/time';
+import {beat, prog, sceneEnd} from '../utils/time';
 
 /**
  * SCENES 06 + 07 — one continuous move.
@@ -43,19 +43,21 @@ const STOCK = beat('s07_stock');
 const NOTE = beat('s07_notify');
 const TABLET_T = beat('s07_tablet');
 const FINAL = beat('s07_final');
-const END = sec(84);
+const END = sceneEnd('s07-mobilidade');
 
 /* --------------------------------- staging --------------------------------- */
 
 const useStaging = (v: boolean) => {
   const PH: V3 = [3400, 0, -1400];
-  const LP: V3 = v ? [PH[0] - 1150, PH[1] + 330, PH[2] - 1150] : [PH[0] - 1850, PH[1] + 120, PH[2] - 800];
-  const TB: V3 = v ? [PH[0] + 1000, PH[1] - 420, PH[2] - 950] : [PH[0] + 1650, PH[1] + 40, PH[2] - 600];
+  // studio set: everything rests on one floor (no floating devices)
+  const FY = PH[1] + PHONE.h / 2;
+  const LP: V3 = v ? [PH[0] - 1700, FY - LAPTOP.h / 2 - 4, PH[2] - 350] : [PH[0] - 2500, FY - LAPTOP.h / 2 - 4, PH[2] - 400];
+  const TB: V3 = v ? [PH[0] - 650, FY - MONITOR.stand - MONITOR.h / 2, PH[2] - 1900] : [PH[0] - 1150, FY - MONITOR.stand - MONITOR.h / 2, PH[2] - 1700];
   const feed = v ? {x: 0, y: -330, w: 820, h: 640} : {x: -470, y: 0, w: 760, h: 640};
   const kpis = REPORT.lines.map((_, i) =>
     v ? {x: (i % 2 ? 1 : -1) * 215, y: 210 + Math.floor(i / 2) * 150} : {x: 300 + (i % 2) * 380, y: -230 + Math.floor(i / 2) * 160},
   );
-  return {PH, LP, TB, feed, kpis};
+  return {PH, LP, TB, FY, feed, kpis};
 };
 
 const rotY = (deg: number, d: number): V3 => [Math.sin((deg * Math.PI) / 180) * d, 0, Math.cos((deg * Math.PI) / 180) * d];
@@ -64,6 +66,15 @@ const add = (a: V3, b: V3): V3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 /* ------------------------------- environments ------------------------------ */
 
 /** Abstract, defocused places (no stock imagery): office daylight ↔ warm home. */
+/** Clean product studio: dark cyclorama, soft overhead light, a horizon glow. */
+const Studio: React.FC<{k: number}> = ({k}) =>
+  k <= 0 ? null : (
+    <AbsoluteFill style={{opacity: k, pointerEvents: 'none'}}>
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 45% at 50% 0%, rgba(210,218,255,0.14), transparent 70%), linear-gradient(180deg, #0d0e12 0%, #08090b 55%, #050506 100%)'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse 70% 10% at 50% 62%, rgba(140,155,255,0.10), transparent 70%)'}} />
+    </AbsoluteFill>
+  );
+
 const Environment: React.FC<{home: number; yaw: number; strength: number}> = ({home, yaw, strength}) => {
   const L = useLayout();
   const px = -yaw * 9;
@@ -102,17 +113,19 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
   const f = useCurrentFrame() + from;
   const L = useLayout();
   const v = L.vertical;
-  const {PH, LP, TB, feed, kpis} = useStaging(v);
+  const {PH, LP, TB, FY, feed, kpis} = useStaging(v);
   const d0 = v ? 1500 : 1350;
   const dPh = v ? 1750 : 1250; // phone medium shot
   const dClose = v ? 760 : 700; // chat close-up
   const lift = v ? -300 : -120; // compose the phone below the titles
-  const lp18 = rotY(18, v ? 2500 : 1700);
-  const tbm16 = rotY(-16, v ? 2000 : 1500);
+  const lp18 = rotY(22, v ? 2400 : 1750);
+  const dIM = v ? 2050 : 1800;
+  const mid: V3 = [v ? PH[0] - 800 : PH[0] - 1150, FY - 700, PH[2] - 700];
+  const wide: V3 = add(mid, [0, v ? -500 : -380, v ? 5200 : 4100]);
   const keys: SmoothKey[] = [
     {f: from, pos: [140, -60, d0 + 500], target: [0, 0, 0], lens: 38, aperture: 0.7},
     {f: CLOCK - 12, pos: [-90, 30, d0], target: [0, 20, 0], lens: 38, aperture: 0.9},
-    {f: EIGHT, pos: [0, -30, d0 - 260], target: [0, -20, 600], lens: 40, focus: d0 - 260 - 700, aperture: 1.4},
+    {f: EIGHT, pos: [0, -30, d0 - 200], target: [0, -20, 300], lens: 40, focus: d0 - 200 - 300, aperture: 1.4},
     {f: REPORT_T + 20, pos: [20, 40, d0 + 150], target: [0, 40, 300], lens: 40, aperture: 1},
     {f: SEND, pos: [40, 20, d0], target: [0, 20, 300], lens: 40, aperture: 1},
     // follow the report to the phone (crane arc)
@@ -126,16 +139,18 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
     {f: APP + 40, pos: add(PH, [-90, lift, dPh - 220]), target: add(PH, [0, lift * 0.85, 0]), lens: 40, aperture: 1.3},
     // orbit: the place changes around the phone
     {f: ENV + 100, pos: add(PH, add(rotY(34, dPh), [0, lift - 40, 0])), target: add(PH, [0, lift * 0.85, 0]), lens: 42, aperture: 1.4},
-    // reveal the ecosystem
-    {f: DEVICES + 120, pos: add(PH, [-400, -520, v ? 3900 : 3300]), target: add(PH, [-150, 60, -700]), lens: 36, aperture: 0.8},
-    // one sale flows through the devices
-    {f: SALE - 6, pos: add(LP, add(lp18, [0, -60, 0])), target: LP, lens: 40, aperture: 1},
-    {f: STOCK + 20, pos: add(LP, add(lp18, [60, -40, -120])), target: add(LP, [-120, 120, 0]), lens: 40, aperture: 1},
-    {f: NOTE + 10, pos: add(PH, [120, -60, dPh - 80]), target: add(PH, [0, -120, 0]), lens: 40, aperture: 1.3},
-    {f: TABLET_T + 26, pos: add(TB, add(tbm16, [0, -40, 0])), target: TB, lens: 40, aperture: 1},
-    // final composition: a slow orbit around the integrated ecosystem
-    {f: FINAL + 30, pos: add(PH, [-260, -620, v ? 3500 : 3300]), target: add(PH, [-80, -40, -700]), lens: 36, aperture: 0.7},
-    {f: END + 20, pos: add(PH, [300, -560, v ? 3300 : 3150]), target: add(PH, [-40, -40, -700]), lens: 36, aperture: 0.7},
+    // reveal the studio: desktop centre, notebook left, phone right
+    {f: DEVICES + 50, pos: wide, target: mid, lens: 36, aperture: 0.7, stop: true},
+    // zoom into the desktop
+    {f: DEVICES + 110, pos: add(TB, [320, -160, dIM]), target: add(TB, [60, -90, 0]), lens: 40, aperture: 0.9},
+    // one sale flows through the devices: notebook → phone → desktop
+    {f: SALE - 8, pos: add(LP, add(lp18, [0, -80, 0])), target: LP, lens: 40, aperture: 1, stop: true},
+    {f: STOCK + 16, pos: add(LP, add(lp18, [50, -60, -140])), target: add(LP, [-100, 80, 0]), lens: 40, aperture: 1},
+    {f: NOTE + 8, pos: add(PH, [140, -80, v ? 1550 : 1150]), target: add(PH, [0, -90, 0]), lens: 40, aperture: 1.3, stop: true},
+    {f: TABLET_T + 22, pos: add(TB, [320, -160, dIM - 200]), target: add(TB, [60, -90, 0]), lens: 40, aperture: 0.9, stop: true},
+    // final composition: zoom out, slow orbit around the integrated set
+    {f: FINAL + 40, pos: add(wide, [-260, 0, 0]), target: mid, lens: 36, aperture: 0.7},
+    {f: END + 20, pos: add(wide, [240, 40, -160]), target: mid, lens: 36, aperture: 0.7},
   ];
   const cam = camSmooth(f, keys, 2);
 
@@ -203,7 +218,8 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
   const phoneIn = EASE.out(prog(f, SEND + 10, NOTIFY - 10, EASE.linear));
   const devIn = (d: number) => EASE.out(prog(f, DEVICES + d, DEVICES + d + 60, EASE.linear));
   const envMix = prog(f, ENV, ENV + 90, EASE.inOut);
-  const envStrength = prog(f, SEND + 20, NOTIFY, EASE.inOut);
+  const envStrength = prog(f, SEND + 20, NOTIFY, EASE.inOut) * (1 - prog(f, DEVICES - 30, DEVICES + 40, EASE.inOut));
+  const studio = prog(f, DEVICES - 40, DEVICES + 40, EASE.inOut);
   const phoneRy = -8 + Math.sin(prog(f, ENV, DEVICES, EASE.linear) * Math.PI) * 10;
   const wordPool = (a: number, b: number) => prog(f, a - 20, a + 10) * (1 - prog(f, b, b + 30));
 
@@ -211,6 +227,7 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
     <AbsoluteFill style={{background: COLORS.black}}>
       <AbsoluteFill style={{background: `radial-gradient(ellipse 100% 70% at 50% 110%, rgba(81,112,255,${0.18 * opsFade + 0.06}), transparent 70%)`}} />
       <Environment home={envMix} yaw={cam.yaw ?? 0} strength={envStrength} />
+      <Studio k={studio} />
       <CssWorld cam={cam}>
         {/* ---- the day being recorded ---- */}
         {opsFade > 0.01 ? (
@@ -232,12 +249,12 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
             })}
             {/* 20:00 — the digital clock */}
             {clockIn > 0.01 ? (
-              <Plane x={0} y={-20} z={600} w={900} h={360} opacity={clockIn} sharp>
+              <Plane x={0} y={-20} z={300} w={900} h={360} opacity={clockIn} sharp>
                 <div style={{width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative'}}>
                   <div style={{position: 'absolute', inset: -60, background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0,0,0,0.85), transparent 75%)'}} />
                   {fire > 0 ? <div style={{position: 'absolute', left: '50%', top: '45%', width: 300, height: 300, marginLeft: -150, marginTop: -150, borderRadius: 300, border: `3px solid ${COLORS.accent}`, opacity: 1 - fire, transform: `scale(${0.5 + fire * 2.4})`}} /> : null}
                   <div style={{position: 'relative'}}>
-                    <DigitalClock tick={tick} size={150} armed={fire} />
+                    <DigitalClock tick={tick} size={L.vertical ? 104 : 120} armed={fire} />
                   </div>
                   <Label size={22} color={fire > 0 ? COLORS.accentSoft : COLORS.gray} weight={500} caps style={{position: 'relative', marginTop: 10, letterSpacing: '0.3em'}}>
                     {fire > 0 ? 'Automação iniciada' : 'Relatório diário · 20:00'}
@@ -269,12 +286,15 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
         ) : null}
 
         {/* ---- devices ---- */}
-        <Floor y={PH[1] + PHONE.h / 2 + 30} z={PH[2]} w={6000} d={5000} opacity={phoneIn * 0.9} warm={envMix} />
+        <Floor y={FY + 2} z={PH[2] - 900} w={9000} d={6000} opacity={phoneIn * 0.9} warm={envMix * (1 - studio)} />
+        <ContactShadow x={PH[0]} y={FY} z={PH[2]} w={620} d={160} opacity={phoneIn} />
+        <ContactShadow x={LP[0]} y={FY} z={LP[2] + LAPTOP.deck / 2} w={2100} d={1500} opacity={devIn(0) * 0.8} />
+        <ContactShadow x={TB[0]} y={FY} z={TB[2] + 40} w={900} d={620} opacity={devIn(24)} />
         {devIn(0) > 0 ? (
-          <Laptop x={LP[0]} y={LP[1] - (1 - devIn(0)) * -300} z={LP[2] - (1 - devIn(0)) * 600} ry={18} opacity={devIn(0)} screen={<AppLaptop s={sync} w={LAPTOP.screenW} h={LAPTOP.screenH} />} />
+          <Laptop x={LP[0]} y={LP[1]} z={LP[2] - (1 - devIn(0)) * 500} ry={22} opacity={devIn(0)} screen={<AppLaptop s={sync} w={LAPTOP.screenW} h={LAPTOP.screenH} />} />
         ) : null}
         {devIn(24) > 0 ? (
-          <Tablet x={TB[0]} y={TB[1]} z={TB[2] - (1 - devIn(24)) * 600} ry={-16} rx={-4} opacity={devIn(24)} screen={<AppTablet s={sync} w={TABLET.w - TABLET.inset * 2} h={TABLET.h - TABLET.inset * 2} />} />
+          <Monitor x={TB[0]} y={TB[1]} z={TB[2] - (1 - devIn(24)) * 500} opacity={devIn(24)} screen={<AppTablet s={sync} w={MONITOR.screenW} h={MONITOR.screenH} />} />
         ) : null}
         {phoneIn > 0 ? <Phone x={PH[0]} y={PH[1] + (1 - phoneIn) * 200} z={PH[2]} ry={phoneRy} opacity={phoneIn} light={envMix} screen={phoneScreen} /> : null}
       </CssWorld>
@@ -282,7 +302,7 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
       {/* ---- strategic type (each with a local light falloff for contrast) ---- */}
       <Title f={f} at={S6 + 40} out={CLOCK - 20} anchor="top" lines={[eyebrow('RELATÓRIOS', v ? 40 : 36), keyline('AUTOMÁTICOS.', v ? 112 : 104)]} />
       <Title f={f} at={CLOCK + 30} out={REPORT_T - 6} anchor="bottom" offset={v ? -40 : 0} lines={[keyline('TODOS OS DIAS.', v ? 86 : 80)]} />
-      <Title f={f} at={NOTIFY + 4} out={OPEN + 6} anchor="top" lines={[eyebrow('DIRETO NO SEU', v ? 40 : 36), keyline('WHATSAPP.', v ? 112 : 104)]} />
+      <Title f={f} at={NOTIFY + 4} out={OPEN - 16} anchor="top" lines={[eyebrow('DIRETO NO SEU', v ? 40 : 36), keyline('WHATSAPP.', v ? 112 : 104)]} />
       <Title f={f} at={S7 + 40} out={TAP - 10} anchor="top" lines={[keyline('SUA EMPRESA.', v ? 96 : 88), {...keyline('SEU CONTROLE.', v ? 96 : 88), color: COLORS.accentSoft, delay: 22}]} />
       <Title f={f} at={ENV + 20} out={DEVICES - 10} anchor="top" lines={[eyebrow('DE ONDE', v ? 40 : 36), keyline('ESTIVER.', v ? 120 : 110)]} />
       <Title f={f} at={FINAL + 10} out={END - 26} anchor="top" lines={[eyebrow('COM A PRATICIDADE DE UM APLICATIVO', v ? 28 : 30), keyline('TUDO CONECTADO.', v ? 100 : 96)]} />
@@ -299,7 +319,7 @@ const SyncLegend: React.FC<{f: number; pool: number}> = ({f, pool}) => {
     {t: 'Venda registrada no notebook', at: SALE},
     {t: 'Estoque atualizado', at: STOCK},
     {t: 'Notificação no celular', at: NOTE},
-    {t: 'Financeiro atualizado no tablet', at: TABLET_T},
+    {t: 'Financeiro atualizado no computador', at: TABLET_T},
   ];
   return (
     <AbsoluteFill style={{justifyContent: 'flex-start', alignItems: 'center', pointerEvents: 'none'}}>
