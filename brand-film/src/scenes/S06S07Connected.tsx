@@ -6,7 +6,8 @@ import {COLORS, FONTS} from '../config/theme';
 import {DAY_EVENTS, DayFeed, DigitalClock, KpiCard, REPORT, ReportDoc} from '../interfaces/DailyReport';
 import {ContactShadow, Floor, Laptop, LAPTOP, Monitor, MONITOR, Phone, PHONE} from '../interfaces/Devices';
 import {ChatAppIcon, HOME_ICON, HomeScreen, LockScreen, SCREEN, WhatsAppChat} from '../interfaces/PhoneScreens';
-import {AppLaptop, AppPhone, AppTablet, type SyncState} from '../interfaces/SystemApps';
+import {AppLaptop, AppPhone, type SyncState} from '../interfaces/SystemApps';
+import {DesktopDashboard} from '../interfaces/DesktopDashboard';
 import {Label} from '../interfaces/ui';
 import {Title, eyebrow, keyline} from '../typography/Title';
 import {EASE} from '../utils/easing';
@@ -21,7 +22,7 @@ import {beat, prog, sceneEnd} from '../utils/time';
  *      the report travels to a smartphone → notification → the chat opens.
  * 07 · Mobility: the same phone → home screen → tap the installed system (opens
  *      full screen, like a native app) → the environment changes around it
- *      (office → home) → tablet and laptop join → one sale flows through all
+ *      (office → home) → desktop and notebook join → one sale flows through all
  *      three devices → final ecosystem composition.
  * All data is fictional and demonstrative.
  */
@@ -66,12 +67,32 @@ const add = (a: V3, b: V3): V3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 /* ------------------------------- environments ------------------------------ */
 
 /** Abstract, defocused places (no stock imagery): office daylight ↔ warm home. */
-/** Clean product studio: dark cyclorama, soft overhead light, a horizon glow. */
+/**
+ * Product studio: dark cyclorama, a soft backlight behind the set (rim-lights
+ * the devices), a lit horizon and a perspective floor grid fading into depth.
+ */
 const Studio: React.FC<{k: number}> = ({k}) =>
   k <= 0 ? null : (
-    <AbsoluteFill style={{opacity: k, pointerEvents: 'none'}}>
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 45% at 50% 0%, rgba(210,218,255,0.14), transparent 70%), linear-gradient(180deg, #0d0e12 0%, #08090b 55%, #050506 100%)'}} />
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse 70% 10% at 50% 62%, rgba(140,155,255,0.10), transparent 70%)'}} />
+    <AbsoluteFill style={{opacity: k, pointerEvents: 'none', overflow: 'hidden'}}>
+      <AbsoluteFill style={{background: 'linear-gradient(180deg, #0e1016 0%, #0a0b10 52%, #050506 100%)'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse 55% 30% at 50% 38%, rgba(120,140,255,0.22), rgba(81,112,255,0.06) 45%, transparent 75%)'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse 90% 6% at 50% 58%, rgba(200,210,255,0.16), transparent 70%)'}} />
+      <div
+        style={{
+          position: 'absolute',
+          left: '-60%',
+          right: '-60%',
+          top: '58%',
+          height: '80%',
+          transformOrigin: '50% 0%',
+          transform: 'perspective(900px) rotateX(72deg)',
+          backgroundImage:
+            'linear-gradient(rgba(160,175,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(160,175,255,0.10) 1px, transparent 1px)',
+          backgroundSize: '120px 120px',
+          maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.9), transparent 70%)',
+          WebkitMaskImage: 'linear-gradient(180deg, rgba(0,0,0,0.9), transparent 70%)',
+        }}
+      />
     </AbsoluteFill>
   );
 
@@ -294,7 +315,7 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
           <Laptop x={LP[0]} y={LP[1]} z={LP[2] - (1 - devIn(0)) * 500} ry={22} opacity={devIn(0)} screen={<AppLaptop s={sync} w={LAPTOP.screenW} h={LAPTOP.screenH} />} />
         ) : null}
         {devIn(24) > 0 ? (
-          <Monitor x={TB[0]} y={TB[1]} z={TB[2] - (1 - devIn(24)) * 500} opacity={devIn(24)} screen={<AppTablet s={sync} w={MONITOR.screenW} h={MONITOR.screenH} />} />
+          <Monitor x={TB[0]} y={TB[1]} z={TB[2] - (1 - devIn(24)) * 500} opacity={devIn(24)} screen={<DesktopDashboard s={sync} w={MONITOR.screenW} h={MONITOR.screenH} t={f - DEVICES} />} />
         ) : null}
         {phoneIn > 0 ? <Phone x={PH[0]} y={PH[1] + (1 - phoneIn) * 200} z={PH[2]} ry={phoneRy} opacity={phoneIn} light={envMix} screen={phoneScreen} /> : null}
       </CssWorld>
