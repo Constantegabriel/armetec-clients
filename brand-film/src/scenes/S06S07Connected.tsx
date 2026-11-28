@@ -139,8 +139,9 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
   const dPh = v ? 1750 : 1250; // phone medium shot
   const dClose = v ? 760 : 700; // chat close-up
   const lift = v ? -300 : -120; // compose the phone below the titles
-  const lp18 = rotY(22, v ? 2400 : 1750);
-  const dIM = v ? 2050 : 1800;
+  // close-ups always frame the WHOLE device (no cropped sides)
+  const lp18 = rotY(22, v ? 3100 : 2150);
+  const dIM = v ? 3600 : 2500;
   const mid: V3 = [v ? PH[0] - 800 : PH[0] - 1150, FY - 700, PH[2] - 700];
   const wide: V3 = add(mid, [0, v ? -500 : -380, v ? 5200 : 4100]);
   const keys: SmoothKey[] = [
@@ -163,12 +164,12 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
     // reveal the studio: desktop centre, notebook left, phone right
     {f: DEVICES + 50, pos: wide, target: mid, lens: 36, aperture: 0.7, stop: true},
     // zoom into the desktop
-    {f: DEVICES + 110, pos: add(TB, [320, -160, dIM]), target: add(TB, [60, -90, 0]), lens: 40, aperture: 0.9},
+    {f: DEVICES + 110, pos: add(TB, [160, -120, dIM]), target: add(TB, [0, 150, 0]), lens: 40, aperture: 0.6},
     // one sale flows through the devices: notebook → phone → desktop
-    {f: SALE - 8, pos: add(LP, add(lp18, [0, -80, 0])), target: LP, lens: 40, aperture: 1, stop: true},
-    {f: STOCK + 16, pos: add(LP, add(lp18, [50, -60, -140])), target: add(LP, [-100, 80, 0]), lens: 40, aperture: 1},
+    {f: SALE - 8, pos: add(LP, add(lp18, [0, -520, 0])), target: add(LP, [0, 260, 320]), lens: 40, aperture: 0.6, stop: true},
+    {f: STOCK + 16, pos: add(LP, add(lp18, [60, -500, -160])), target: add(LP, [0, 260, 320]), lens: 40, aperture: 0.6},
     {f: NOTE + 8, pos: add(PH, [140, -80, v ? 1550 : 1150]), target: add(PH, [0, -90, 0]), lens: 40, aperture: 1.3, stop: true},
-    {f: TABLET_T + 22, pos: add(TB, [320, -160, dIM - 200]), target: add(TB, [60, -90, 0]), lens: 40, aperture: 0.9, stop: true},
+    {f: TABLET_T + 22, pos: add(TB, [160, -120, dIM - 150]), target: add(TB, [0, 150, 0]), lens: 40, aperture: 0.6, stop: true},
     // final composition: zoom out, slow orbit around the integrated set
     {f: FINAL + 40, pos: add(wide, [-260, 0, 0]), target: mid, lens: 36, aperture: 0.7},
     {f: END + 20, pos: add(wide, [240, 40, -160]), target: mid, lens: 36, aperture: 0.7},
@@ -238,6 +239,14 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
   );
   const phoneIn = EASE.out(prog(f, SEND + 10, NOTIFY - 10, EASE.linear));
   const devIn = (d: number) => EASE.out(prog(f, DEVICES + d, DEVICES + d + 60, EASE.linear));
+  // isolation: while one device is in close-up, the others step out of frame softly
+  const iso = (a: number, b: number) => prog(f, a - 18, a, EASE.inOut) * (1 - prog(f, b, b + 18, EASE.inOut));
+  const isoMon = Math.max(iso(DEVICES + 80, SALE - 38), iso(TABLET_T - 12, FINAL + 6));
+  const isoLap = iso(SALE - 30, NOTE - 30);
+  const isoPh = iso(NOTE - 18, TABLET_T - 24);
+  const showLap = 1 - Math.max(isoMon, isoPh);
+  const showMon = 1 - Math.max(isoLap, isoPh);
+  const showPh = f < DEVICES ? 1 : 1 - Math.max(isoMon, isoLap);
   const envMix = prog(f, ENV, ENV + 90, EASE.inOut);
   const envStrength = prog(f, SEND + 20, NOTIFY, EASE.inOut) * (1 - prog(f, DEVICES - 30, DEVICES + 40, EASE.inOut));
   const studio = prog(f, DEVICES - 40, DEVICES + 40, EASE.inOut);
@@ -308,21 +317,21 @@ export const S06S07Connected: React.FC<{from: number}> = ({from}) => {
 
         {/* ---- devices ---- */}
         <Floor y={FY + 2} z={PH[2] - 900} w={9000} d={6000} opacity={phoneIn * 0.9} warm={envMix * (1 - studio)} />
-        <ContactShadow x={PH[0]} y={FY} z={PH[2]} w={620} d={160} opacity={phoneIn} />
-        <ContactShadow x={LP[0]} y={FY} z={LP[2] + LAPTOP.deck / 2} w={2100} d={1500} opacity={devIn(0) * 0.8} />
-        <ContactShadow x={TB[0]} y={FY} z={TB[2] + 40} w={900} d={620} opacity={devIn(24)} />
-        {devIn(0) > 0 ? (
-          <Laptop x={LP[0]} y={LP[1]} z={LP[2] - (1 - devIn(0)) * 500} ry={22} opacity={devIn(0)} screen={<AppLaptop s={sync} w={LAPTOP.screenW} h={LAPTOP.screenH} />} />
+        <ContactShadow x={PH[0]} y={FY} z={PH[2]} w={620} d={160} opacity={phoneIn * showPh} />
+        <ContactShadow x={LP[0]} y={FY} z={LP[2] + LAPTOP.deck / 2} w={2100} d={1500} opacity={devIn(0) * 0.8 * showLap} />
+        <ContactShadow x={TB[0]} y={FY} z={TB[2] + 40} w={900} d={620} opacity={devIn(24) * showMon} />
+        {devIn(0) * showLap > 0.01 ? (
+          <Laptop x={LP[0]} y={LP[1]} z={LP[2] - (1 - devIn(0)) * 500} ry={22} opacity={devIn(0) * showLap} screen={<AppLaptop s={sync} w={LAPTOP.screenW} h={LAPTOP.screenH} />} />
         ) : null}
-        {devIn(24) > 0 ? (
-          <Monitor x={TB[0]} y={TB[1]} z={TB[2] - (1 - devIn(24)) * 500} opacity={devIn(24)} screen={<DesktopDashboard s={sync} w={MONITOR.screenW} h={MONITOR.screenH} t={f - DEVICES} />} />
+        {devIn(24) * showMon > 0.01 ? (
+          <Monitor x={TB[0]} y={TB[1]} z={TB[2] - (1 - devIn(24)) * 500} opacity={devIn(24) * showMon} screen={<DesktopDashboard s={sync} w={MONITOR.screenW} h={MONITOR.screenH} t={f - DEVICES} />} />
         ) : null}
-        {phoneIn > 0 ? <Phone x={PH[0]} y={PH[1] + (1 - phoneIn) * 200} z={PH[2]} ry={phoneRy} opacity={phoneIn} light={envMix} screen={phoneScreen} /> : null}
+        {phoneIn * showPh > 0.01 ? <Phone x={PH[0]} y={PH[1] + (1 - phoneIn) * 200} z={PH[2]} ry={phoneRy} opacity={phoneIn * showPh} light={envMix} screen={phoneScreen} /> : null}
       </CssWorld>
 
       {/* ---- strategic type (each with a local light falloff for contrast) ---- */}
       <Title f={f} at={S6 + 40} out={CLOCK - 20} anchor="top" lines={[eyebrow('RELATÓRIOS', v ? 40 : 36), keyline('AUTOMÁTICOS.', v ? 112 : 104)]} />
-      <Title f={f} at={CLOCK + 30} out={REPORT_T - 6} anchor="bottom" offset={v ? -40 : 0} lines={[keyline('TODOS OS DIAS.', v ? 86 : 80)]} />
+      <Title f={f} at={CLOCK + 30} out={REPORT_T - 6} anchor="bottom" offset={v ? -40 : 0} scrim={1.3} lines={[keyline('TODOS OS DIAS.', v ? 86 : 80)]} />
       <Title f={f} at={NOTIFY + 4} out={OPEN - 16} anchor="top" lines={[eyebrow('DIRETO NO SEU', v ? 40 : 36), keyline('WHATSAPP.', v ? 112 : 104)]} />
       <Title f={f} at={S7 + 40} out={TAP - 10} anchor="top" lines={[keyline('SUA EMPRESA.', v ? 96 : 88), {...keyline('SEU CONTROLE.', v ? 96 : 88), color: COLORS.accentSoft, delay: 22}]} />
       <Title f={f} at={ENV + 20} out={DEVICES - 10} anchor="top" lines={[eyebrow('DE ONDE', v ? 40 : 36), keyline('ESTIVER.', v ? 120 : 110)]} />

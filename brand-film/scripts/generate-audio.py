@@ -214,7 +214,6 @@ def s_sub_hit():
     t = T(2.4)
     f = 40 + 55 * np.exp(-t * 18)
     s = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 1.8)
-    s += fft_filter(noise(len(t)) * env_exp(t, 35), hi=260) * 0.35
     return stereo(norm(np.tanh(s * 1.5), 0.9))
 
 
@@ -222,7 +221,7 @@ def s_impact(soft=False):
     t = T(2.8)
     f = 52 + 90 * np.exp(-t * 26)
     sub = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 2.1)
-    crack = fft_filter(noise(len(t)) * env_exp(t, 16), lo=200, hi=6000) * 0.55
+    crack = fft_filter(noise(len(t)) * env_exp(t, 60), lo=200, hi=3000) * 0.18
     metal = sum(sine(fr, t) * env_exp(t, 4 + i) for i, fr in enumerate([311, 467, 733, 1190])) * 0.06
     s = stereo(np.tanh((sub + crack + metal) * 1.3))
     s = s + convolve(s, reverb_ir(2.2, 3.6, 5000)) * 0.32
@@ -354,18 +353,13 @@ def s_phone_notify():
 
 
 def s_freeze():
+    # hard stop: a deep hit + a suspended glass tone (no hiss)
     out = np.zeros((int(3.0 * SR), 2))
-    # suck-in (reverse air) into a hard stop
-    pre = swoosh(0.5, 400, 9000, 0.9)
-    pre = pre * np.linspace(0.2, 1, len(pre))[:, None]
-    mix_into(out, pre, 0)
-    hit = s_impact()
-    mix_into(out, hit * 0.8, 0.0)
-    # frozen glass tail (suspended)
+    mix_into(out, s_impact() * 0.8, 0.0)
     t = T(2.6)
     glass = sum(sine(f, t) * env_exp(t, 1.4 + i * 0.3) for i, f in enumerate([2093, 3136, 4186])) * 0.08
-    tail = stereo(glass)
-    tail += convolve(tail, reverb_ir(2.5, 2.6, 9000)) * 0.6
+    tail = stereo(glass * np.clip(t / 0.01, 0, 1))
+    tail += convolve(tail, reverb_ir(2.5, 2.6, 9000)) * 0.4
     mix_into(out, tail, 0.02)
     return norm(out, 0.95)
 
@@ -391,12 +385,13 @@ def s_shatter():
 
 
 def s_resolve():
-    t = T(3.0)
-    swell = fft_filter(noise((len(t), 2)), lo=80, hi=1200) * (env_ar(t, 0.4, 3.0))[:, None] * 0.6
-    sub = stereo(sine(55, t) * env_ar(t, 0.15, 3.0) * 0.6)
-    shimmer = stereo(sum(sine(f, t) * env_exp(t, 1.8 + i * 0.4) for i, f in enumerate([1046.5, 1568, 2093])) * 0.08 * np.clip(t / 0.08, 0, 1), 0, 1)
-    out = swell + sub + shimmer
-    out += convolve(out, reverb_ir(2.5, 3, 7000)) * 0.35
+    # warm, clean bloom: soft sub + three glass partials (no noise swell)
+    t = T(2.6)
+    sub = sine(55, t) * env_ar(t, 0.12, 2.6) * 0.55
+    body = sum(sine(f, t) * env_exp(t, 1.6 + i * 0.5) for i, f in enumerate([523.25, 783.99, 1046.5])) * 0.12 * np.clip(t / 0.05, 0, 1)
+    shimmer = sum(sine(f, t) * env_exp(t, 2.4 + i * 0.4) for i, f in enumerate([1568, 2093])) * 0.05 * np.clip(t / 0.08, 0, 1)
+    out = stereo(sub + body + shimmer, 0, 1)
+    out += convolve(out, reverb_ir(2.2, 3, 7000)) * 0.25
     return norm(out, 0.7)
 
 
@@ -436,21 +431,22 @@ def s_digital_tick():
 
 
 def s_converge(dur):
+    # cards converge: a rising tonal glide with soft data ticks
     t = T(dur)
     k = t / dur
-    n = noise((len(t), 2))
-    s = fft_filter(n, lo=500, hi=7000) * (np.sin(np.pi * k) ** 1.5)[:, None]
-    s[:, 0] *= 1 - k * 0.5
-    s[:, 1] *= 0.5 + k * 0.5
-    tone = stereo(sine(300 + 900 * k ** 2, t) * (k ** 2) * 0.15)
-    return norm(addp(s * 0.6, tone), 0.55)
+    glide = sine(300 + 900 * k ** 2, t) * np.sin(np.pi * k) * 0.25
+    out = stereo(glide, 0, 1)
+    for i in range(8):
+        mix_into(out, stereo(blip(1800 + i * 180, 0.05, 80) * 0.3, -0.8 + i * 0.22), (i / 8) * dur)
+    return norm(out, 0.5)
 
 
 def s_send():
-    t = T(0.6)
-    f = 400 + 2200 * (t / 0.6) ** 0.7
-    fwip = sine(f, t) * env_ar(t, 0.02, 0.6) * 0.3
-    return norm(addp(swoosh(0.6, 800, 9000, 0.4), stereo(fwip)), 0.6)
+    # clean upward "fwip" (pitched, no noise)
+    t = T(0.45)
+    f = 500 + 2400 * (t / 0.45) ** 0.6
+    fwip = sine(f, t) * env_ar(t, 0.02, 0.45) * 0.4
+    return stereo(norm(fwip, 0.55))
 
 
 def s_tap():
@@ -459,10 +455,9 @@ def s_tap():
 
 
 def s_app_open():
-    out = swoosh(0.7, 300, 5000, 0.35) * 0.6
-    t = T(0.7)
-    bloom = stereo(sine(880, t) * env_exp(t, 6) * 0.12 + sine(1320, t) * env_exp(t, 7) * 0.08)
-    return norm(addp(out, bloom), 0.55)
+    t = T(0.8)
+    bloom = sine(660 + 220 * (1 - np.exp(-t * 12)), t) * env_exp(t, 5) * 0.25 + sine(1320, t) * env_exp(t, 7) * 0.1
+    return stereo(norm(bloom * np.clip(t / 0.01, 0, 1), 0.55))
 
 
 def s_success():
@@ -526,6 +521,93 @@ def s_logo():
     return norm(out, 0.9)
 
 
+def s_glint():
+    t = T(1.3)
+    g = sum(sine(f, t) * env_exp(t, 2.6 + i) for i, f in enumerate([2637, 3951, 5274])) * 0.12
+    return stereo(norm(g * np.clip(t / 0.03, 0, 1), 0.45), 0, 1)
+
+
+def s_ping():
+    t = T(1.0)
+    p = (sine(1318.5, t) * env_exp(t, 5) + sine(2637, t) * env_exp(t, 9) * 0.3) * np.clip(t / 0.004, 0, 1)
+    out = stereo(p)
+    out += convolve(out, reverb_ir(1.0, 4, 9000)) * 0.2
+    return norm(out, 0.45)
+
+
+def s_sweep():
+    # the hand of light: a tone that turns a full circle (glide up, settle)
+    t = T(1.0)
+    f = 440 * 2 ** (1.5 * np.sin(np.clip(t / 0.9, 0, 1) * np.pi / 2))
+    s = sine(f, t) * env_ar(t, 0.05, 1.0) * 0.3 + sine(f * 2, t) * env_ar(t, 0.05, 1.0) * 0.08
+    return stereo(norm(s, 0.5), 0, 1)
+
+
+def s_dive():
+    # camera dives in: a descending pitched glide into a soft low thud
+    t = T(0.9)
+    f = 900 * np.exp(-t * 3.2) + 80
+    s = sine(f, t) * env_ar(t, 0.05, 0.9) * 0.35
+    thud = sine(60, t - 0.6) * env_exp(np.clip(t - 0.6, 0, None), 9) * (t > 0.6) * 0.6
+    return stereo(norm(s + thud, 0.55))
+
+
+def s_pop():
+    t = T(0.18)
+    p = sine(700 + 700 * np.exp(-t * 45), t) * env_exp(t, 28)
+    return stereo(norm(p, 0.4), 0)
+
+
+def s_stamp():
+    t = T(0.5)
+    thump = sine(110 + 140 * np.exp(-t * 40), t) * env_exp(t, 16)
+    return stereo(norm(addp(thump, click_raw(3500, 0.04, 0.4, 300) * 0.5), 0.7))
+
+
+def s_place():
+    t = T(0.3)
+    return stereo(norm(sine(180 + 120 * np.exp(-t * 30), t) * env_exp(t, 20), 0.45))
+
+
+def s_scatter():
+    out = np.zeros((int(1.4 * SR), 2))
+    for i in range(70):
+        at = (rng.random() ** 1.6) * 0.9
+        mix_into(out, stereo(blip(2200 + rng.random() * 3800, 0.05, 90) * (0.2 + 0.5 * rng.random()), rng.uniform(-1, 1)), at)
+    return norm(out, 0.5)
+
+
+def s_shift():
+    # clean lateral glide between modules (two-note tonal slide)
+    t = T(0.5)
+    f = 523.25 * 2 ** (np.clip(t / 0.35, 0, 1) * 7 / 12)
+    return stereo(norm(sine(f, t) * env_ar(t, 0.03, 0.5) * 0.3, 0.4), 0, 1)
+
+
+def s_ratchet(dur):
+    # the control wheel spinning up: precise mechanical clicks accelerating, then slowing to the lock
+    out = np.zeros((int((dur + 0.3) * SR), 2))
+    pos = 0.0
+    while pos < dur:
+        k = pos / dur
+        mix_into(out, stereo(addp(click_raw(9000, 0.025, 0.4, 1400 + 600 * k) * (0.5 + 0.3 * k)), rng.uniform(-0.3, 0.3)), pos)
+        rate = 0.018 + 0.11 * (k ** 2.2)  # fast at first, slowing as it settles
+        pos += rate
+    return norm(out, 0.55)
+
+
+def s_trace(dur):
+    # a comet drawing the contour: bright rising tone with a sparkle tail
+    t = T(dur + 0.4)
+    k = np.clip(t / dur, 0, 1)
+    f = 900 * 2 ** (k * 1.2)
+    tone = sine(f, t) * np.sin(np.pi * k) ** 0.7 * 0.22 + sine(f * 1.5, t) * np.sin(np.pi * k) * 0.06
+    out = stereo(tone, 0, 1)
+    for i in range(10):
+        mix_into(out, stereo(blip(3000 + rng.random() * 3000, 0.06, 70) * 0.25, rng.uniform(-0.6, 0.6)), (i / 10) * dur)
+    return norm(out, 0.5)
+
+
 def render_cue(c):
     k = c['type']
     d = c.get('dur', 1.0)
@@ -578,6 +660,17 @@ def render_cue(c):
         'construct': lambda: s_construct(d),
         'lock': s_lock,
         'logo': s_logo,
+        'glint': s_glint,
+        'ping': s_ping,
+        'sweep': s_sweep,
+        'dive': s_dive,
+        'pop': s_pop,
+        'stamp': s_stamp,
+        'place': s_place,
+        'scatter': s_scatter,
+        'shift': s_shift,
+        'ratchet': lambda: s_ratchet(d),
+        'trace': lambda: s_trace(d),
     }
     if k not in table:
         raise SystemExit(f'Unknown sfx type in timeline.json: {k}')
@@ -600,7 +693,7 @@ if __name__ == '__main__':
     for c in TL['sfx']:
         mix_into(dry, render_cue(c) * c['gain'], c['t'])
     # shared space: a short, dark room so every sound lives in one place
-    wet = convolve(dry, reverb_ir(1.8, 3.4, 6000)) * 0.14
+    wet = convolve(dry, reverb_ir(1.6, 3.6, 6000)) * 0.1
     out = fft_filter(dry + wet, lo=28)
     out = np.tanh(out * 1.15) / np.tanh(1.15)
     t = np.arange(N) / SR

@@ -77,120 +77,134 @@ const MenosTarefas: React.FC<{f: number}> = ({f}) => {
 
 /* -------------------------------- CONTROLE -------------------------------- */
 /**
- * MAIS CONTROLE — a control panel calibrates itself: a precision dial settles
- * from erratic readings to a locked target, sliders align on one line,
- * switches turn on in sequence. Everything ends perfectly still and aligned.
+ * MAIS CONTROLE — a control wheel spins up and locks at 100% while the
+ * operation's facts confirm one by one below it; the camera then dives into
+ * the wheel and the next take is born from its light.
  */
+const CTRL_ROWS = [
+  {k: 'Estoque sincronizado', v: '9.730 itens'},
+  {k: 'Financeiro conciliado', v: 'R$ 86,4 mil'},
+  {k: 'Pedidos rastreados', v: '48 de 48'},
+  {k: 'Tarefas da equipe em dia', v: '312 concluídas'},
+];
+
 const MaisControle: React.FC<{f: number}> = ({f}) => {
   const L = useLayout();
   const s = L.u;
-  if (f < CONTROLE - 10 || f > PROD + 14) return null;
-  const out = 1 - prog(f, PROD - 8, PROD + 10, EASE.in);
-  const inA = EASE.out(prog(f, CONTROLE - 6, CONTROLE + 18, EASE.linear));
-  const lock = EASE.dolly(prog(f, CONTROLE + 8, CONTROLE + 62, EASE.linear));
+  if (f < CONTROLE - 10 || f > PROD + 6) return null;
+  const inA = EASE.out(prog(f, CONTROLE - 6, CONTROLE + 16, EASE.linear));
   const t = f - CONTROLE;
-  // erratic needle → precise target (jitter decays as control is gained)
-  const jitter = (1 - lock) * (Math.sin(t * 0.9) * 55 + Math.sin(t * 2.3 + 1) * 30);
-  const target = 0.82;
-  const val = target * EASE.out(prog(f, CONTROLE, CONTROLE + 50, EASE.linear));
-  const R = (L.vertical ? 250 : 210) * s;
+  const spin = EASE.out(prog(f, CONTROLE, CONTROLE + 66, EASE.linear)); // 0 → 100 %
+  const locked = spin >= 0.999;
+  const lockFlash = f >= CONTROLE + 66 ? Math.exp(-(f - CONTROLE - 66) / 8) : 0;
+  // dive into the wheel → next take
+  const dive = EASE.in(prog(f, PROD - 24, PROD + 4, EASE.linear));
+  const R = (L.vertical ? 230 : 190) * s;
   const cx = L.width / 2;
-  const cy = L.height / 2 + L.safeCenterY + (L.vertical ? 120 : 80) * s;
+  const cy = L.height / 2 + L.safeCenterY - (L.vertical ? 10 : 30) * s;
   const a0 = -225;
   const sweep = 270;
-  const needle = a0 + sweep * val + jitter;
+  const wheelRot = (1 - spin) * -540; // the whole wheel turns and settles
   const polar = (deg: number, r: number) => [cx + Math.cos((deg * Math.PI) / 180) * r, cy + Math.sin((deg * Math.PI) / 180) * r];
   const arc = (from: number, to: number, r: number) => {
     const [x1, y1] = polar(from, r);
     const [x2, y2] = polar(to, r);
     return `M${x1},${y1} A${r},${r} 0 ${to - from > 180 ? 1 : 0} 1 ${x2},${y2}`;
   };
-  const [nx, ny] = polar(needle, R * 0.78);
-  const sliders = [0.3, 0.75, 0.5, 0.62];
-  const sw = (L.vertical ? 560 : 460) * s;
-  const sy0 = cy + R + (L.vertical ? 110 : 70) * s;
-  const pct = Math.round(val * 100 * (0.9 + 0.1 * lock));
+  const pct = Math.round(spin * 100);
+  const rowsTop = cy + R * 1.28;
   return (
-    <AbsoluteFill style={{opacity: out * inA}}>
+    <AbsoluteFill style={{opacity: inA * (1 - prog(f, PROD - 4, PROD + 6, EASE.linear)), transform: `scale(${1 + dive * 6})`, transformOrigin: `${cx}px ${cy}px`, filter: dive > 0.02 ? `blur(${dive * 14}px)` : undefined}}>
       <svg width={L.width} height={L.height} style={{position: 'absolute', inset: 0}}>
         <defs>
           <filter id="ctl-glow">
-            <feGaussianBlur stdDeviation={6} />
+            <feGaussianBlur stdDeviation={7} />
           </filter>
+          <radialGradient id="ctl-core">
+            <stop offset="0" stopColor="rgba(81,112,255,0.35)" />
+            <stop offset="1" stopColor="rgba(81,112,255,0)" />
+          </radialGradient>
         </defs>
-        {/* ticks */}
-        {Array.from({length: 55}, (_, i) => {
-          const d = a0 + (i / 54) * sweep;
-          const major = i % 9 === 0;
-          const [x1, y1] = polar(d, R * (major ? 1.06 : 1.03));
-          const [x2, y2] = polar(d, R * 1.12);
-          const lit = (i / 54) <= val;
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={lit ? COLORS.accentSoft : 'rgba(255,255,255,0.22)'} strokeWidth={major ? 3 : 1.5} />;
-        })}
-        <path d={arc(a0, a0 + sweep, R * 0.92)} stroke="rgba(255,255,255,0.08)" strokeWidth={14 * s} fill="none" strokeLinecap="round" />
-        <path d={arc(a0, a0 + sweep * val, R * 0.92)} stroke={COLORS.accent} strokeWidth={14 * s} fill="none" strokeLinecap="round" />
-        <path d={arc(a0, a0 + sweep * val, R * 0.92)} stroke={COLORS.accent} strokeWidth={14 * s} fill="none" strokeLinecap="round" filter="url(#ctl-glow)" opacity={0.7} />
-        {/* target marker */}
-        {(() => {
-          const [tx, ty] = polar(a0 + sweep * target, R * 1.2);
-          return <circle cx={tx} cy={ty} r={7 * s} fill={lock > 0.95 ? COLORS.accent : 'rgba(255,255,255,0.4)'} />;
-        })()}
-        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={COLORS.white} strokeWidth={4 * s} strokeLinecap="round" />
-        <circle cx={cx} cy={cy} r={12 * s} fill={COLORS.white} />
-        <text x={cx} y={cy + R * 0.45} textAnchor="middle" fill={COLORS.white} style={{fontFamily: FONTS.display, fontWeight: 600, fontSize: 64 * s, fontVariantNumeric: 'tabular-nums'}}>
+        <circle cx={cx} cy={cy} r={R * 1.5} fill="url(#ctl-core)" opacity={0.5 + lockFlash} />
+        {/* the wheel: ticks rotate with it */}
+        <g transform={`rotate(${wheelRot} ${cx} ${cy})`}>
+          {Array.from({length: 72}, (_, i) => {
+            const d = (i / 72) * 360;
+            const major = i % 6 === 0;
+            const [x1, y1] = polar(d, R * (major ? 1.1 : 1.13));
+            const [x2, y2] = polar(d, R * 1.19);
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={major ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)'} strokeWidth={major ? 3 : 1.5} />;
+          })}
+        </g>
+        <path d={arc(a0, a0 + sweep, R * 0.95)} stroke="rgba(255,255,255,0.07)" strokeWidth={18 * s} fill="none" strokeLinecap="round" />
+        <path d={arc(a0, a0 + sweep * Math.max(0.001, spin), R * 0.95)} stroke={COLORS.accent} strokeWidth={18 * s} fill="none" strokeLinecap="round" />
+        <path d={arc(a0, a0 + sweep * Math.max(0.001, spin), R * 0.95)} stroke={COLORS.accentSoft} strokeWidth={18 * s} fill="none" strokeLinecap="round" filter="url(#ctl-glow)" opacity={0.6 + lockFlash} />
+        {/* inner precision ring counter-rotates */}
+        <g transform={`rotate(${-wheelRot * 0.5} ${cx} ${cy})`}>
+          <circle cx={cx} cy={cy} r={R * 0.72} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} strokeDasharray="2 10" />
+        </g>
+        <text x={cx} y={cy + 26 * s} textAnchor="middle" fill={COLORS.white} style={{fontFamily: FONTS.display, fontWeight: 650, fontSize: 92 * s, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums'}}>
           {pct}%
         </text>
-        <text x={cx} y={cy + R * 0.45 + 34 * s} textAnchor="middle" fill={COLORS.gray} style={{fontFamily: FONTS.sans, fontSize: 18 * s, letterSpacing: '0.24em'}}>
-          OPERAÇÃO SOB CONTROLE
+        <text x={cx} y={cy + 66 * s} textAnchor="middle" fill={locked ? COLORS.accentSoft : COLORS.gray} style={{fontFamily: FONTS.sans, fontSize: 17 * s, letterSpacing: '0.26em'}}>
+          {locked ? 'TUDO SOB CONTROLE' : 'SINCRONIZANDO'}
         </text>
-        {/* sliders snap onto one aligned value */}
-        {sliders.map((v0, i) => {
-          const y = sy0 + i * 46 * s;
-          const v1 = lerpN(v0 + Math.sin(t * 0.5 + i) * 0.15 * (1 - lock), target, lock);
-          const x0 = cx - sw / 2;
+      </svg>
+      {/* the facts under control */}
+      <div style={{position: 'absolute', left: cx - (L.vertical ? 380 : 330) * s, top: rowsTop, width: (L.vertical ? 760 : 660) * s, display: 'flex', flexDirection: 'column', gap: 10 * s}}>
+        {CTRL_ROWS.map((r, i) => {
+          const a = EASE.out(prog(f, CONTROLE + 16 + i * 11, CONTROLE + 34 + i * 11, EASE.linear));
+          const ok = f >= CONTROLE + 30 + i * 11;
           return (
-            <g key={i}>
-              <line x1={x0} y1={y} x2={x0 + sw} y2={y} stroke="rgba(255,255,255,0.12)" strokeWidth={6 * s} strokeLinecap="round" />
-              <line x1={x0} y1={y} x2={x0 + sw * clamp(v1)} y2={y} stroke={COLORS.accentSoft} strokeWidth={6 * s} strokeLinecap="round" />
-              <circle cx={x0 + sw * clamp(v1)} cy={y} r={11 * s} fill={COLORS.white} />
-            </g>
+            <div key={r.k} style={{display: 'flex', alignItems: 'center', gap: 16 * s, padding: `${12 * s}px ${18 * s}px`, borderRadius: 14 * s, background: 'rgba(255,255,255,0.04)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.07)', opacity: a, transform: `translateY(${(1 - a) * 16}px)`}}>
+              <div style={{width: 30 * s, height: 30 * s, borderRadius: 30, background: ok ? COLORS.success : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                {ok ? (
+                  <svg width={18 * s} height={18 * s} viewBox="0 0 24 24" fill="none" stroke="#0b0b0c" strokeWidth={3}>
+                    <path d="M5 12.5l4.2 4.2L19 7" />
+                  </svg>
+                ) : null}
+              </div>
+              <div style={{flex: 1, fontFamily: FONTS.sans, fontSize: 24 * s, color: '#E4E4E7'}}>{r.k}</div>
+              <div style={{fontFamily: FONTS.sans, fontSize: 24 * s, color: COLORS.white, fontWeight: 600, fontVariantNumeric: 'tabular-nums'}}>{r.v}</div>
+            </div>
           );
         })}
-        {/* alignment guide appears when everything locks */}
-        <line x1={cx - sw / 2 + sw * target} y1={sy0 - 26 * s} x2={cx - sw / 2 + sw * target} y2={sy0 + 3 * 46 * s + 26 * s} stroke={COLORS.accent} strokeWidth={2} strokeDasharray="6 6" opacity={clamp((lock - 0.8) * 5)} />
-      </svg>
+      </div>
       <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
-        <div style={{position: 'absolute', transform: `translateY(${cy - L.height / 2 - R - (L.vertical ? 190 : 140) * s}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        <div style={{position: 'absolute', transform: `translateY(${cy - L.height / 2 - R * 1.25 - (L.vertical ? 150 : 110) * s}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
           <SplitText text="MAIS" family={FONTS.sans} size={(L.vertical ? 44 : 40) * s} weight={400} tracking={0.4} color="#D4D4D8" state={focusIn(f, CONTROLE)} />
           <SplitText
             text="CONTROLE"
-            size={(L.vertical ? 150 : 150) * s}
+            size={150 * s}
             weight={750}
             tracking={-0.04}
-            state={(i, n) => {
-              // glyphs lock onto the baseline one by one, like calibrated parts
+            state={(i) => {
               const k = EASE.dolly(prog(f, CONTROLE + 2 + i * 2.5, CONTROLE + 26 + i * 2.5, EASE.linear));
-              return {y: (i % 2 ? -1 : 1) * 60 * (1 - k), opacity: clamp(k * 3), blur: (1 - k) * 6 + 0 * n};
+              return {y: (i % 2 ? -1 : 1) * 60 * (1 - k), opacity: clamp(k * 3), blur: (1 - k) * 6};
             }}
           />
         </div>
       </AbsoluteFill>
+      {void t}
     </AbsoluteFill>
   );
 };
-
-const lerpN = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /* ------------------------------ PRODUTIVIDADE ----------------------------- */
 const MaisProdutividade: React.FC<{f: number}> = ({f}) => {
   const L = useLayout();
   const s = L.u;
   if (f < PROD - 10 || f > TEMPO + 20) return null;
-  const out = 1 - prog(f, TEMPO - 4, TEMPO + 16, EASE.in);
+  // enter: born from the wheel's light (blue bloom → the bars rise into place)
+  const enter = EASE.out(prog(f, PROD - 6, PROD + 26, EASE.linear));
+  // exit: crane up — the whole take rises out of frame while the clock rises in
+  const leave = EASE.inOut(prog(f, TEMPO - 22, TEMPO + 14, EASE.linear));
+  const out = 1;
   const bars = L.vertical ? 7 : 11;
   const rise = prog(f, PROD, TEMPO, EASE.linear);
   return (
-    <AbsoluteFill style={{opacity: out}}>
+    <AbsoluteFill style={{opacity: out * clamp(enter * 1.5), transform: `translateY(${(1 - enter) * 18 - leave * 105}%)`, filter: leave > 0.03 && leave < 0.97 ? `blur(${Math.sin(leave * Math.PI) * 10}px)` : undefined}}>
+      <AbsoluteFill style={{background: `radial-gradient(circle at 50% 40%, rgba(81,112,255,${0.55 * (1 - enter)}), transparent 60%)`}} />
       {/* progressive light from below */}
       <AbsoluteFill style={{background: `radial-gradient(ellipse 80% ${30 + rise * 40}% at 50% 100%, rgba(81,112,255,${0.15 + rise * 0.3}), transparent 70%)`}} />
       <AbsoluteFill style={{justifyContent: 'flex-end', alignItems: 'center', paddingBottom: (L.vertical ? L.safe.bottom + 90 : 90) * s}}>
@@ -249,9 +263,13 @@ const TempoCrescer: React.FC<{f: number}> = ({f}) => {
   const k = f - TEMPO;
   const cam = camSmooth(f, [
     {f: TEMPO - 16, pos: [-900, -300, 2600], target: [0, 0, 0], lens: 35, aperture: 0.6},
-    {f: END + 40, pos: [380, -140, L.vertical ? 2600 : 2100], target: [0, 40, 0], lens: 35, aperture: 1.4, focus: 900},
+    {f: END - 34, pos: [300, -110, L.vertical ? 2700 : 2200], target: [0, 40, 0], lens: 35, aperture: 1.4, focus: 900},
+    {f: END + 20, pos: [0, 0, 260], target: [0, 0, 0], lens: 35, aperture: 2, focus: 260},
   ]);
-  const inA = prog(f, TEMPO - 16, TEMPO + 10, EASE.out);
+  const inA = 1;
+  const riseUp = EASE.inOut(prog(f, TEMPO - 22, TEMPO + 14, EASE.linear));
+  // final dive into the centre of the dial: the brand is born from it (scene 09)
+  const dive = EASE.in(prog(f, END - 34, END + 20, EASE.linear));
   // calm, real-time clock (no longer accelerated)
   const time = 10 * 3600 + 10 * 60 + 2 + k / 60;
   const rise = EASE.out(prog(f, CRESCER, CRESCER + 50, EASE.linear));
@@ -259,7 +277,7 @@ const TempoCrescer: React.FC<{f: number}> = ({f}) => {
   const push = 1 + prog(f, CRESCER, END + 40, EASE.linear) * 0.06;
   const size = (L.vertical ? 220 : 250) * s;
   return (
-    <AbsoluteFill style={{opacity: inA}}>
+    <AbsoluteFill style={{opacity: inA, transform: `translateY(${(1 - riseUp) * 100}%)`}}>
       <Stage cam={cam} background={COLORS.black} fog={{color: COLORS.black, near: 3000, far: 9000}} envIntensity={0.5} dof={{aperture: 0.0016 * (cam.aperture ?? 1), maxBlur: 0.012}}>
         <ambientLight intensity={0.08} />
         <spotLight position={[-6, 6, 7]} angle={0.6} penumbra={1} intensity={60} decay={1.3} castShadow />
@@ -269,7 +287,7 @@ const TempoCrescer: React.FC<{f: number}> = ({f}) => {
       </Stage>
       {/* the dial recedes into shadow behind the word */}
       <AbsoluteFill style={{background: `radial-gradient(ellipse ${L.vertical ? 95 : 62}% ${L.vertical ? 26 : 38}% at 50% ${50 + ((L.safeCenterY + 40 * s) / L.height) * 100}%, rgba(0,0,0,${0.82 * pool}), rgba(0,0,0,${0.5 * pool}) 55%, transparent 100%)`}} />
-      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
+      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', opacity: 1 - dive, transform: `scale(${1 + dive * 1.6})`, filter: dive > 0.02 ? `blur(${dive * 10}px)` : undefined}}>
         <div style={{position: 'absolute', transform: `translateY(${L.safeCenterY - (L.vertical ? 150 : 140) * s}px)`}}>
           <SplitText text="MAIS TEMPO PARA" family={FONTS.sans} size={(L.vertical ? 44 : 42) * s} weight={400} tracking={0.32} color="#D4D4D8" state={combine(riseIn(f, TEMPO, {stagger: 1.4}), dissolveOut(f, END + 30))} />
         </div>
@@ -294,6 +312,10 @@ const TempoCrescer: React.FC<{f: number}> = ({f}) => {
           {/* a single line of brand light grows under the word */}
           <div style={{height: 3 * s, marginTop: 18 * s, background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)`, transform: `scaleX(${EASE.inOut(prog(f, CRESCER + 20, CRESCER + 80, EASE.linear))})`}} />
         </div>
+      </AbsoluteFill>
+      <AbsoluteFill style={{background: '#000', opacity: EASE.inOut(prog(f, END - 4, END + 18, EASE.linear))}} />
+      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', pointerEvents: 'none'}}>
+        <div style={{width: 14, height: 14, borderRadius: 14, background: '#fff', boxShadow: `0 0 30px 10px ${COLORS.accent}`, opacity: prog(f, END - 8, END + 10, EASE.out)}} />
       </AbsoluteFill>
     </AbsoluteFill>
   );

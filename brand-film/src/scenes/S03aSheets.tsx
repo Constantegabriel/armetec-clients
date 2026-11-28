@@ -103,6 +103,7 @@ export const S03aSheets: React.FC<{from: number}> = ({from}) => {
         at={A + 26}
         out={MORE + 50}
         anchor={v ? 'top' : 'bottom'}
+        scrim={1.25}
         lines={[eyebrow('PREENCHENDO', v ? 40 : 36), keyline('PLANILHAS', v ? 132 : 120)]}
       />
     </AbsoluteFill>
